@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Portal | Brady Wells</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+</head>
+<body class="crm-body">
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">Brady Wells</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+        <li><a href="clients.html" class="btn-nav active">Client Portal</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle">&#9776;</button>
+    </div>
+  </nav>
+
+  <!-- CRM HEADER -->
+  <div class="crm-header">
+    <div class="container">
+      <div class="crm-header-inner">
+        <div>
+          <h1 class="crm-title">Client Management</h1>
+          <p class="crm-subtitle">Manage your prospective clients, track outreach, and grow your book of business.</p>
+        </div>
+        <div class="crm-header-actions">
+          <button class="btn-primary" id="openAddModal">+ Add Client</button>
+          <button class="btn-secondary" id="openImportModal">Import LinkedIn CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="crm-stats-bar">
+    <div class="container">
+      <div class="crm-stats">
+        <div class="crm-stat">
+          <span class="crm-stat-num" id="statTotal">0</span>
+          <span class="crm-stat-label">Total Contacts</span>
+        </div>
+        <div class="crm-stat">
+          <span class="crm-stat-num" id="statNew">0</span>
+          <span class="crm-stat-label">New Leads</span>
+        </div>
+        <div class="crm-stat">
+          <span class="crm-stat-num" id="statContacted">0</span>
+          <span class="crm-stat-label">Contacted</span>
+        </div>
+        <div class="crm-stat">
+          <span class="crm-stat-num" id="statClient">0</span>
+          <span class="crm-stat-label">Active Clients</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CRM CONTENT -->
+  <div class="crm-main">
+    <div class="container">
+
+      <!-- TOOLBAR -->
+      <div class="crm-toolbar">
+        <div class="crm-search-wrap">
+          <span class="search-icon">&#128269;</span>
+          <input type="text" id="searchInput" class="crm-search" placeholder="Search by name, email, or phone..." />
+        </div>
+        <div class="crm-filter-group">
+          <select id="statusFilter" class="crm-select">
+            <option value="">All Statuses</option>
+            <option value="New Lead">New Lead</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Meeting Scheduled">Meeting Scheduled</option>
+            <option value="Active Client">Active Client</option>
+            <option value="Not Interested">Not Interested</option>
+          </select>
+          <select id="sourceFilter" class="crm-select">
+            <option value="">All Sources</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Website Contact Form">Website Contact Form</option>
+            <option value="Manual Entry">Manual Entry</option>
+            <option value="Referral">Referral</option>
+          </select>
+        </div>
+        <div class="crm-action-group">
+          <button class="btn-outline" id="emailSelectedBtn" disabled>Email Selected (<span id="selectedCount">0</span>)</button>
+          <button class="btn-outline" id="exportBtn">Export CSV</button>
+          <button class="btn-danger-outline" id="deleteSelectedBtn" disabled>Delete Selected</button>
+        </div>
+      </div>
+
+      <!-- EMAIL COMPOSE PANEL (hidden by default) -->
+      <div class="compose-panel" id="composePanel" style="display:none;">
+        <div class="compose-panel-header">
+          <h3>Compose Outreach Email</h3>
+          <button class="compose-close" id="closeCompose">&times;</button>
+        </div>
+        <div class="compose-body">
+          <div class="compose-to" id="composeTo"></div>
+          <div class="form-group">
+            <label>Subject Line</label>
+            <input type="text" id="emailSubject" class="form-input" value="Let's Connect — A Conversation About Your Financial Future" />
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea id="emailBody" class="form-input" rows="10">Hi [First Name],
+
+I hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Northwestern Mutual. I'm reaching out because I believe I can add real value to your financial journey.
+
+Whether you're thinking about building wealth, protecting your family with life insurance, or planning for retirement — I'd love to have a quick 20-minute conversation to see if there's a fit.
+
+Northwestern Mutual has helped over 5 million people achieve financial security, and I'd be honored to do the same for you.
+
+Would you be open to a free, no-obligation consultation this week?
+
+Looking forward to connecting,
+
+Brady Wells
+Financial Representative | Northwestern Mutual</textarea>
+          </div>
+          <div class="compose-actions">
+            <button class="btn-primary" id="sendEmailBtn">Open in Email Client</button>
+            <button class="btn-secondary" id="copyEmailBtn">Copy Message</button>
+          </div>
+          <p class="compose-note">* "Open in Email Client" will open your default mail app with all selected recipients pre-filled. For bulk sending, copy the message and use Gmail/Outlook.</p>
+        </div>
+      </div>
+
+      <!-- CLIENT TABLE -->
+      <div class="table-wrap">
+        <table class="clients-table" id="clientsTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAll" /></th>
+              <th class="sortable" data-col="firstName">First Name <span class="sort-arrow">&#8597;</span></th>
+              <th class="sortable" data-col="lastName">Last Name <span class="sort-arrow">&#8597;</span></th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th class="sortable" data-col="status">Status <span class="sort-arrow">&#8597;</span></th>
+              <th class="sortable" data-col="source">Source <span class="sort-arrow">&#8597;</span></th>
+              <th class="sortable" data-col="dateAdded">Date Added <span class="sort-arrow">&#8597;</span></th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+        <div class="table-empty" id="tableEmpty" style="display:none;">
+          <div class="empty-icon">&#128101;</div>
+          <h3>No clients yet</h3>
+          <p>Add your first client manually or import from LinkedIn to get started.</p>
+          <div class="empty-actions">
+            <button class="btn-primary" id="emptyAddBtn">+ Add Client</button>
+            <button class="btn-secondary" id="emptyImportBtn">Import LinkedIn CSV</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== ADD CLIENT MODAL ===================== -->
+  <div class="modal-overlay" id="addModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Client</h2>
+        <button class="modal-close" id="closeAddModal">&times;</button>
+      </div>
+      <form id="clientForm">
+        <input type="hidden" id="editClientId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" id="cfFirstName" class="form-input" placeholder="John" required />
+          </div>
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" id="cfLastName" class="form-input" placeholder="Smith" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="cfPhone" class="form-input" placeholder="(555) 000-0000" />
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="cfEmail" class="form-input" placeholder="john@email.com" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="cfStatus" class="form-input">
+              <option value="New Lead">New Lead</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Meeting Scheduled">Meeting Scheduled</option>
+              <option value="Active Client">Active Client</option>
+              <option value="Not Interested">Not Interested</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Source</label>
+            <select id="cfSource" class="form-input">
+              <option value="Manual Entry">Manual Entry</option>
+              <option value="Referral">Referral</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Website Contact Form">Website Contact Form</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Notes</label>
+          <textarea id="cfNotes" class="form-input" rows="3" placeholder="Any notes about this contact..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelAddModal">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveClientBtn">Save Client</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== LINKEDIN IMPORT MODAL ===================== -->
+  <div class="modal-overlay" id="importModal" style="display:none;">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h2>Import LinkedIn Connections</h2>
+        <button class="modal-close" id="closeImportModal">&times;</button>
+      </div>
+      <div class="import-instructions">
+        <h4>How to export your LinkedIn connections:</h4>
+        <ol>
+          <li>Go to <strong>LinkedIn.com</strong> and click your profile picture</li>
+          <li>Go to <strong>Settings &amp; Privacy</strong></li>
+          <li>Click <strong>Data Privacy</strong> &rarr; <strong>Get a copy of your data</strong></li>
+          <li>Select <strong>"Connections"</strong> and click <strong>Request Archive</strong></li>
+          <li>LinkedIn will email you a download link (usually within 10 minutes)</li>
+          <li>Download and unzip the file — find <strong>Connections.csv</strong></li>
+          <li>Upload that file below</li>
+        </ol>
+        <div class="import-tip">
+          <strong>Tip:</strong> LinkedIn's CSV includes First Name, Last Name, Email Address, Company, and Position. All available fields will be imported automatically.
+        </div>
+      </div>
+      <div class="import-drop-zone" id="dropZone">
+        <div class="drop-icon">&#128196;</div>
+        <p>Drag &amp; drop your <strong>Connections.csv</strong> here</p>
+        <p class="drop-sub">or</p>
+        <label class="btn-primary" for="csvFileInput">Browse Files</label>
+        <input type="file" id="csvFileInput" accept=".csv" style="display:none;" />
+      </div>
+      <div class="import-preview" id="importPreview" style="display:none;">
+        <h4>Preview (<span id="previewCount">0</span> contacts found)</h4>
+        <div class="preview-table-wrap">
+          <table class="preview-table" id="previewTable">
+            <thead>
+              <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Position</th>
+              </tr>
+            </thead>
+            <tbody id="previewTableBody"></tbody>
+          </table>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelImport">Cancel</button>
+          <button type="button" class="btn-primary" id="confirmImport">Import All Contacts</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== VIEW/EDIT NOTES MODAL ===================== -->
+  <div class="modal-overlay" id="notesModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="notesModalTitle">Client Notes</h2>
+        <button class="modal-close" id="closeNotesModal">&times;</button>
+      </div>
+      <div id="notesModalContent" class="notes-content"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="closeNotesCancelBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/clients.js"></script>
+  <script>
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+    });
+  </script>
+</body>
+</html>
