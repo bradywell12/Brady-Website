@@ -10,6 +10,28 @@
 </head>
 <body class="crm-body">
 
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" style="display:none;">
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-logo">BW</div>
+        <h2 class="login-title">Client Portal</h2>
+        <p class="login-sub">Brady Wells — Northwestern Mutual</p>
+        <form id="loginForm">
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required autofocus />
+          </div>
+          <div id="loginError" style="display:none;color:#dc2626;font-size:0.85rem;margin-bottom:0.75rem;">Incorrect password. Try again.</div>
+          <button type="submit" class="btn-primary full-btn">Sign In</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN PORTAL (hidden until logged in) -->
+  <div id="portalContent" style="display:none;">
+
   <!-- NAV -->
   <nav class="navbar">
     <div class="nav-container">
@@ -340,6 +362,8 @@ Financial Representative | Northwestern Mutual</textarea>
   <!-- TOAST NOTIFICATION -->
   <div class="toast" id="toast"></div>
 
+  </div> <!-- end portalContent -->
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/supabase-config.js"></script>
@@ -348,6 +372,43 @@ Financial Representative | Northwestern Mutual</textarea>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
     });
+
+    // ── Password Protection ──
+    const PORTAL_PASSWORD = 'brady2026';  // Change this to your own password
+
+    function checkAuth() {
+      return sessionStorage.getItem('bw_auth') === 'true';
+    }
+
+    function showPortal() {
+      document.getElementById('loginScreen').style.display  = 'none';
+      document.getElementById('portalContent').style.display = 'block';
+    }
+
+    function showLogin() {
+      document.getElementById('loginScreen').style.display  = 'flex';
+      document.getElementById('portalContent').style.display = 'none';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const entered = document.getElementById('loginPassword').value;
+      if (entered === PORTAL_PASSWORD) {
+        sessionStorage.setItem('bw_auth', 'true');
+        showPortal();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('loginPassword').focus();
+      }
+    });
+
+    // Check on page load
+    if (checkAuth()) {
+      showPortal();
+    } else {
+      showLogin();
+    }
   </script>
 </body>
 </html>
