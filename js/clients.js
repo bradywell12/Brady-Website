@@ -569,6 +569,10 @@ function parseCSVText(text) {
 }
 
 // ─── Email Outreach ───────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof emailjs !== 'undefined') emailjs.init(EJS_PUBLIC_KEY);
+});
+
 function openComposePanel() {
   const selected = clients.filter(c => selectedIds.has(c.id));
   const withEmail = selected.filter(c => c.email);
@@ -598,25 +602,38 @@ async function sendBulkEmail() {
   const selected = clients.filter(c => selectedIds.has(c.id) && c.email);
   if (selected.length === 0) { showToast('No email addresses available.', 'error'); return; }
 
-  const subject = encodeURIComponent(document.getElementById('emailSubject').value.trim());
-  const body    = encodeURIComponent(document.getElementById('emailBody').value.trim());
+  const subject = document.getElementById('emailSubject').value.trim();
+  const body    = document.getElementById('emailBody').value.trim();
+  const btn     = document.getElementById('sendEmailBtn');
 
-  if (selected.length > 50) {
-    const batches = [];
-    for (let i = 0; i < selected.length; i += 50)
-      batches.push(selected.slice(i, i + 50).map(c => c.email).join(','));
-    alert(
-      `You have ${selected.length} recipients. Here are ${batches.length} batches to paste into BCC:\n\n` +
-      batches.map((b, i) => `Batch ${i + 1}:\n${b}`).join('\n\n')
-    );
-    return;
+  btn.textContent = `Sending 0 / ${selected.length}...`;
+  btn.disabled = true;
+
+  let sent = 0, failed = 0;
+
+  for (const client of selected) {
+    // Personalize the message — replace [First Name] placeholder
+    const personalizedBody = body.replace(/\[First Name\]/gi, client.first_name || 'there');
+
+    try {
+      await emailjs.send(EJS_SERVICE_ID, EJS_OUTREACH_TEMPLATE, {
+        to_email:   client.email,
+        to_name:    `${client.first_name || ''} ${client.last_name || ''}`.trim(),
+        subject:    subject,
+        message:    personalizedBody,
+      });
+      sent++;
+    } catch (err) {
+      console.warn(`Failed to send to ${client.email}:`, err);
+      failed++;
+    }
+
+    btn.textContent = `Sending ${sent + failed} / ${selected.length}...`;
   }
 
-  const bcc = selected.map(c => encodeURIComponent(c.email)).join(',');
-  window.location.href = `mailto:?bcc=${bcc}&subject=${subject}&body=${body}`;
-
-  // Update "New Lead" → "Contacted"
-  const toUpdate = selected.filter(c => c.status === 'New Lead').map(c => c.id);
+  // Update "New Lead" → "Contacted" for everyone we successfully emailed
+  const sentClients = selected.slice(0, sent);
+  const toUpdate = sentClients.filter(c => c.status === 'New Lead').map(c => c.id);
   if (toUpdate.length > 0) {
     await updateStatusBatch(toUpdate, 'Contacted');
     toUpdate.forEach(id => {
@@ -626,7 +643,14 @@ async function sendBulkEmail() {
     applyFiltersAndRender();
   }
 
-  showToast(`Email client opened for ${selected.length} recipient(s). Statuses updated.`, 'success');
+  btn.textContent = 'Open in Email Client';
+  btn.disabled = false;
+
+  if (failed === 0) {
+    showToast(`${sent} email${sent !== 1 ? 's' : ''} sent successfully!`, 'success');
+  } else {
+    showToast(`${sent} sent, ${failed} failed. Check console for details.`, 'error');
+  }
 }
 
 function copyEmailBody() {

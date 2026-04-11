@@ -241,8 +241,11 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/supabase-config.js"></script>
   <script>
+    emailjs.init(EJS_PUBLIC_KEY);
+
     // Mobile nav toggle
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
@@ -261,6 +264,7 @@
       const phone   = document.getElementById('phone').value.trim();
       const message = document.getElementById('message').value.trim();
 
+      // Save lead to Supabase
       const { error } = await db.from('clients').insert([{
         first_name: first,
         last_name:  last,
@@ -274,10 +278,21 @@
       if (error) {
         alert('Something went wrong. Please try again or reach out directly.');
         console.error(error);
-      } else {
-        alert('Thank you, ' + first + '! Your message has been received. I\'ll be in touch within 24 hours.');
-        this.reset();
+        btn.textContent = 'Send Message';
+        btn.disabled = false;
+        return;
       }
+
+      // Send Brady a notification email via EmailJS
+      await emailjs.send(EJS_SERVICE_ID, EJS_CONTACT_TEMPLATE, {
+        from_name:  first + ' ' + last,
+        from_email: email,
+        phone:      phone || 'Not provided',
+        message:    message || 'No message provided',
+      });
+
+      alert('Thank you, ' + first + '! Your message has been received. I\'ll be in touch within 24 hours.');
+      this.reset();
 
       btn.textContent = 'Send Message';
       btn.disabled = false;
