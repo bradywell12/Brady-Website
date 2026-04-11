@@ -432,6 +432,9 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .auth-tab.active { background: var(--navy); color: #fff; }
 .auth-error { color: #dc2626; font-size: 0.83rem; margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; background: #fef2f2; border-radius: var(--radius-sm); border: 1px solid #fca5a5; }
 .auth-success { color: #16a34a; font-size: 0.83rem; margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; background: #f0fdf4; border-radius: var(--radius-sm); border: 1px solid #86efac; }
+.password-rules { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.5rem; }
+.rule { font-size: 0.78rem; color: #9ca3af; }
+.rule-pass { color: #16a34a; font-weight: 600; }
 .btn-logout { padding: 0.6rem 1.2rem; background: transparent; color: rgba(255,255,255,0.75); font-size: 0.85rem; font-weight: 600; border: 1.5px solid rgba(255,255,255,0.3); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .btn-logout:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.6); }
 

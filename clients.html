@@ -56,7 +56,11 @@
           </div>
           <div class="form-group">
             <label>Password</label>
-            <input type="password" id="signupPassword" class="form-input" placeholder="Min 6 characters" required autocomplete="new-password" />
+            <input type="password" id="signupPassword" class="form-input" placeholder="Min 10 characters + special character" required autocomplete="new-password" />
+            <div class="password-rules">
+              <span id="ruleLength" class="rule">&#10007; At least 10 characters</span>
+              <span id="ruleSpecial" class="rule">&#10007; One special character (!@#$%^&*)</span>
+            </div>
           </div>
           <div id="signupError" class="auth-error" style="display:none;"></div>
           <div id="signupSuccess" class="auth-success" style="display:none;">Account created! Check your email to confirm, then sign in.</div>
@@ -453,10 +457,35 @@ Financial Representative | Northwestern Mutual</textarea>
       btn.textContent = 'Sign In'; btn.disabled = false;
     });
 
+    // Live password rule feedback
+    document.getElementById('signupPassword').addEventListener('input', function() {
+      const val = this.value;
+      const hasLength  = val.length >= 10;
+      const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(val);
+      const ruleLength  = document.getElementById('ruleLength');
+      const ruleSpecial = document.getElementById('ruleSpecial');
+      ruleLength.textContent  = (hasLength  ? '✓' : '✗') + ' At least 10 characters';
+      ruleLength.className    = 'rule ' + (hasLength  ? 'rule-pass' : '');
+      ruleSpecial.textContent = (hasSpecial ? '✓' : '✗') + ' One special character (!@#$%^&*)';
+      ruleSpecial.className   = 'rule ' + (hasSpecial ? 'rule-pass' : '');
+    });
+
     // Sign Up
     document.getElementById('signupForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const btn = document.getElementById('signupBtn');
+      const password = document.getElementById('signupPassword').value;
+
+      // Validate password requirements
+      const hasLength  = password.length >= 10;
+      const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+      if (!hasLength || !hasSpecial) {
+        const el = document.getElementById('signupError');
+        el.textContent = 'Password must be at least 10 characters and include a special character.';
+        el.style.display = 'block';
+        return;
+      }
+
       btn.textContent = 'Creating account...'; btn.disabled = true;
 
       const { error } = await db.auth.signUp({
