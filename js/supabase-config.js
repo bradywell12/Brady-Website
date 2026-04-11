@@ -15,7 +15,7 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
    4. Go to Account → copy your Public Key
    5. Paste all three values below
    ===================================================== */
-const EJS_SERVICE_ID       = 'PASTE_YOUR_SERVICE_ID';       // e.g. 'service_abc123'
-const EJS_CONTACT_TEMPLATE = 'PASTE_CONTACT_TEMPLATE_ID';   // e.g. 'template_abc123'
-const EJS_OUTREACH_TEMPLATE= 'PASTE_OUTREACH_TEMPLATE_ID';  // e.g. 'template_xyz456'
-const EJS_PUBLIC_KEY       = 'PASTE_YOUR_PUBLIC_KEY';       // e.g. 'user_AbCdEfGh'
+const EJS_SERVICE_ID       = 'service_01xwvw5';       // e.g. 'service_abc123'
+const EJS_CONTACT_TEMPLATE = 'template_7j7sep8';   // e.g. 'template_abc123'
+const EJS_OUTREACH_TEMPLATE= 'template_ab5zros';  // e.g. 'template_xyz456'
+const EJS_PUBLIC_KEY       = '-_wPZUI9pKJkHXqvL';       // e.g. 'user_AbCdEfGh'
