@@ -598,9 +598,25 @@ function openSingleEmail(client) {
   openComposePanel();
 }
 
+// Wraps emailjs.send with a 10-second timeout so it never hangs forever
+function sendWithTimeout(serviceId, templateId, params) {
+  return Promise.race([
+    emailjs.send(serviceId, templateId, params),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out after 10s')), 10000)
+    )
+  ]);
+}
+
 async function sendBulkEmail() {
   const selected = clients.filter(c => selectedIds.has(c.id) && c.email);
   if (selected.length === 0) { showToast('No email addresses available.', 'error'); return; }
+
+  // Guard: warn if keys are still placeholders
+  if (EJS_SERVICE_ID.startsWith('PASTE') || EJS_OUTREACH_TEMPLATE.startsWith('PASTE') || EJS_PUBLIC_KEY.startsWith('PASTE')) {
+    showToast('EmailJS keys are not set up yet. Open js/supabase-config.js and fill in your keys.', 'error');
+    return;
+  }
 
   const subject = document.getElementById('emailSubject').value.trim();
   const body    = document.getElementById('emailBody').value.trim();
@@ -611,45 +627,46 @@ async function sendBulkEmail() {
 
   let sent = 0, failed = 0;
 
-  for (const client of selected) {
-    // Personalize the message — replace [First Name] placeholder
-    const personalizedBody = body.replace(/\[First Name\]/gi, client.first_name || 'there');
+  try {
+    for (const client of selected) {
+      const personalizedBody = body.replace(/\[First Name\]/gi, client.first_name || 'there');
 
-    try {
-      await emailjs.send(EJS_SERVICE_ID, EJS_OUTREACH_TEMPLATE, {
-        to_email:   client.email,
-        to_name:    `${client.first_name || ''} ${client.last_name || ''}`.trim(),
-        subject:    subject,
-        message:    personalizedBody,
-      });
-      sent++;
-    } catch (err) {
-      console.warn(`Failed to send to ${client.email}:`, err);
-      failed++;
+      try {
+        await sendWithTimeout(EJS_SERVICE_ID, EJS_OUTREACH_TEMPLATE, {
+          to_email: client.email,
+          to_name:  `${client.first_name || ''} ${client.last_name || ''}`.trim(),
+          subject:  subject,
+          message:  personalizedBody,
+        });
+        sent++;
+      } catch (err) {
+        console.warn(`Failed to send to ${client.email}:`, err);
+        failed++;
+      }
+
+      btn.textContent = `Sending ${sent + failed} / ${selected.length}...`;
     }
 
-    btn.textContent = `Sending ${sent + failed} / ${selected.length}...`;
-  }
+    // Update "New Lead" → "Contacted"
+    const toUpdate = selected.slice(0, sent).filter(c => c.status === 'New Lead').map(c => c.id);
+    if (toUpdate.length > 0) {
+      await updateStatusBatch(toUpdate, 'Contacted');
+      toUpdate.forEach(id => {
+        const idx = clients.findIndex(c => c.id === id);
+        if (idx !== -1) clients[idx].status = 'Contacted';
+      });
+      applyFiltersAndRender();
+    }
 
-  // Update "New Lead" → "Contacted" for everyone we successfully emailed
-  const sentClients = selected.slice(0, sent);
-  const toUpdate = sentClients.filter(c => c.status === 'New Lead').map(c => c.id);
-  if (toUpdate.length > 0) {
-    await updateStatusBatch(toUpdate, 'Contacted');
-    toUpdate.forEach(id => {
-      const idx = clients.findIndex(c => c.id === id);
-      if (idx !== -1) clients[idx].status = 'Contacted';
-    });
-    applyFiltersAndRender();
-  }
-
-  btn.textContent = 'Open in Email Client';
-  btn.disabled = false;
-
-  if (failed === 0) {
-    showToast(`${sent} email${sent !== 1 ? 's' : ''} sent successfully!`, 'success');
-  } else {
-    showToast(`${sent} sent, ${failed} failed. Check console for details.`, 'error');
+    if (failed === 0) {
+      showToast(`${sent} email${sent !== 1 ? 's' : ''} sent successfully!`, 'success');
+    } else {
+      showToast(`${sent} sent, ${failed} failed — check browser console for details.`, 'error');
+    }
+  } finally {
+    // Always re-enable the button no matter what
+    btn.textContent = 'Send Emails';
+    btn.disabled = false;
   }
 }
 
