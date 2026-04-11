@@ -465,11 +465,18 @@ function parseVCF(file) {
     const cards = text.split(/END:VCARD/i).filter(c => c.trim());
 
     pendingImport = cards.map(card => {
+      // Normalize line endings and unfold folded lines
+      const c = card
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/\n[ \t]/g, ''); // unfold RFC 6350 folded lines
+
       const get = (field) => {
-        const regex = new RegExp(`^${field}[^:]*:(.+)$`, 'im');
-        const match = card.match(regex);
+        const regex = new RegExp(`(?:item\\d+\\.)?${field}[^:\\n]*:([^\\n]+)`, 'i');
+        const match = c.match(regex);
         return match ? match[1].trim() : '';
       };
+      card = c;
 
       // Name — try N field first (Last;First;Middle;;), then FN (full name)
       let firstName = '', lastName = '';
@@ -488,9 +495,13 @@ function parseVCF(file) {
         }
       }
 
-      // Phone — grab first TEL value (handles all iPhone formats)
-      // e.g. TEL:, TEL;type=CELL:, TEL;TYPE=HOME:, item1.TEL:, TEL;PREF:
-      const telMatch = card.match(/(?:^|\n)(?:item\d+\.)?TEL[^:\n]*:(.+)/i);
+      // Phone — catch every TEL variation iPhone uses
+      // Normalize line endings first, then try multiple patterns
+      const normalizedCard = card.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const telMatch =
+        normalizedCard.match(/(?:item\d+\.)?TEL[^:\n]*:([^\n]+)/i) ||
+        normalizedCard.match(/TEL[^:\n]*:([^\n]+)/i) ||
+        normalizedCard.match(/TEL:([^\n]+)/i);
       const phone = telMatch ? telMatch[1].trim().replace(/\s+/g, '') : '';
 
       // Email — grab first EMAIL value
