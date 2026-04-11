@@ -4,7 +4,9 @@
 const SUPABASE_URL  = 'https://wzlempnjmnzwjxdiqdmm.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6bGVtcG5qbW56d2p4ZGlxZG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NjQxNDcsImV4cCI6MjA5MTQ0MDE0N30.adQJYad-rQBJrljMv8tA3M-kEYNqHwtMGsif1q5w9H0';
 
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: { persistSession: false }
+});
 
 /* =====================================================
    EmailJS Configuration
