@@ -411,8 +411,8 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .crm-header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 .crm-header-actions .btn-primary,
 .crm-header-actions .btn-secondary { white-space: nowrap; }
-.crm-header-actions .btn-secondary { color: #fff; border-color: rgba(255,255,255,0.6); }
-.crm-header-actions .btn-secondary:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: #fff; }
+.crm-header-actions .btn-secondary { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+.crm-header-actions .btn-secondary:hover { background: var(--gold-light); color: var(--navy); border-color: var(--gold-light); }
 
 /* STATS BAR */
 .crm-stats-bar {
