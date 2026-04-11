@@ -60,6 +60,10 @@
           <span class="crm-stat-num" id="statClient">0</span>
           <span class="crm-stat-label">Active Clients</span>
         </div>
+        <div class="crm-stat">
+          <span class="crm-stat-num" id="statNotCalled">0</span>
+          <span class="crm-stat-label">Not Called Yet</span>
+        </div>
       </div>
     </div>
   </div>
@@ -89,6 +93,11 @@
             <option value="Website Contact Form">Website Contact Form</option>
             <option value="Manual Entry">Manual Entry</option>
             <option value="Referral">Referral</option>
+          </select>
+          <select id="callFilter" class="crm-select">
+            <option value="">All Contacts</option>
+            <option value="not_called">Not Called Yet</option>
+            <option value="called">Already Called</option>
           </select>
         </div>
         <div class="crm-action-group">
@@ -141,13 +150,13 @@ Financial Representative | Northwestern Mutual</textarea>
           <thead>
             <tr>
               <th><input type="checkbox" id="selectAll" /></th>
-              <th class="sortable" data-col="firstName">First Name <span class="sort-arrow">&#8597;</span></th>
-              <th class="sortable" data-col="lastName">Last Name <span class="sort-arrow">&#8597;</span></th>
+              <th class="sortable" data-col="first_name">First Name <span class="sort-arrow">&#8597;</span></th>
+              <th class="sortable" data-col="last_name">Last Name <span class="sort-arrow">&#8597;</span></th>
               <th>Phone</th>
               <th>Email</th>
               <th class="sortable" data-col="status">Status <span class="sort-arrow">&#8597;</span></th>
+              <th class="sortable" data-col="last_called">Last Called <span class="sort-arrow">&#8597;</span></th>
               <th class="sortable" data-col="source">Source <span class="sort-arrow">&#8597;</span></th>
-              <th class="sortable" data-col="dateAdded">Date Added <span class="sort-arrow">&#8597;</span></th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -295,6 +304,37 @@ Financial Representative | Northwestern Mutual</textarea>
       <div id="notesModalContent" class="notes-content"></div>
       <div class="modal-actions">
         <button type="button" class="btn-secondary" id="closeNotesCancelBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CALL OUTCOME MODAL ===================== -->
+  <div class="modal-overlay" id="callModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="callModalTitle">Log Call</h2>
+        <button class="modal-close" id="closeCallModal">&times;</button>
+      </div>
+      <div style="padding:1.5rem 1.75rem;">
+        <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.95rem;">How did the call go? Update their status below.</p>
+        <div class="form-group">
+          <label>Call Outcome</label>
+          <select id="callOutcome" class="form-input">
+            <option value="Contacted">Reached them — still a potential client</option>
+            <option value="Meeting Scheduled">Reached them — meeting scheduled!</option>
+            <option value="Active Client">They signed on as a client!</option>
+            <option value="Not Interested">Not interested</option>
+            <option value="New Lead">No answer — will try again</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Call Notes (optional)</label>
+          <textarea id="callNotes" class="form-input" rows="3" placeholder="Anything worth remembering from this call..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelCallModal">Cancel</button>
+          <button type="button" class="btn-primary" id="saveCallBtn">Save Call Log</button>
+        </div>
       </div>
     </div>
   </div>

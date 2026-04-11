@@ -552,6 +552,7 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .action-btn:hover { background: var(--bg-light); color: var(--navy); }
 .action-btn.edit:hover { color: var(--accent); }
 .action-btn.email:hover { color: #16a34a; }
+.action-btn.call-btn:hover { color: #16a34a; background: #dcfce7; }
 .action-btn.delete:hover { color: #dc2626; background: #fef2f2; }
 
 /* TABLE EMPTY */

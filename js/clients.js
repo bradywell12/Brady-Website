@@ -91,6 +91,8 @@ function applyFiltersAndRender() {
   const statusF = document.getElementById('statusFilter').value;
   const sourceF = document.getElementById('sourceFilter').value;
 
+  const callF = document.getElementById('callFilter').value;
+
   filteredClients = clients.filter(c => {
     const matchSearch =
       !search ||
@@ -100,7 +102,10 @@ function applyFiltersAndRender() {
       (c.phone      || '').toLowerCase().includes(search);
     const matchStatus = !statusF || c.status === statusF;
     const matchSource = !sourceF || c.source === sourceF;
-    return matchSearch && matchStatus && matchSource;
+    const matchCall   = !callF ||
+      (callF === 'not_called' && !c.last_called) ||
+      (callF === 'called'     &&  c.last_called);
+    return matchSearch && matchStatus && matchSource && matchCall;
   });
 
   // Sort
@@ -136,19 +141,26 @@ function renderTable() {
       <td><input type="checkbox" class="row-check" data-id="${c.id}" ${selectedIds.has(c.id) ? 'checked' : ''} /></td>
       <td>${escHtml(c.first_name || '')}</td>
       <td>${escHtml(c.last_name  || '')}</td>
-      <td>${c.phone
-        ? `<a href="tel:${escHtml(c.phone)}">${escHtml(c.phone)}</a>`
-        : '<span style="color:#9ca3af">—</span>'}</td>
+      <td style="white-space:nowrap">
+        ${c.phone
+          ? `<a href="tel:${escHtml(c.phone)}" style="color:var(--text)">${escHtml(c.phone)}</a>`
+          : '<span style="color:#9ca3af">—</span>'}
+      </td>
       <td>${c.email
         ? `<a href="mailto:${escHtml(c.email)}" style="color:var(--accent)">${escHtml(c.email)}</a>`
         : '<span style="color:#9ca3af">—</span>'}</td>
       <td>${statusBadge(c.status)}</td>
-      <td>${sourceBadge(c.source)}</td>
-      <td style="white-space:nowrap;color:var(--text-muted);font-size:0.82rem">
-        ${c.created_at ? new Date(c.created_at).toLocaleDateString() : '—'}
+      <td style="white-space:nowrap;font-size:0.82rem">
+        ${c.last_called
+          ? `<span style="color:#16a34a;font-weight:600">&#10003; ${new Date(c.last_called).toLocaleDateString()}</span>`
+          : '<span style="color:#9ca3af">Not called</span>'}
       </td>
+      <td>${sourceBadge(c.source)}</td>
       <td>
         <div class="row-actions">
+          ${c.phone
+            ? `<button class="action-btn call-btn" title="Call ${escHtml(c.first_name)}" data-id="${c.id}">&#128222;</button>`
+            : ''}
           <button class="action-btn edit"  title="Edit"   data-id="${c.id}">&#9998;</button>
           ${c.email
             ? `<button class="action-btn email" title="Email" data-id="${c.id}">&#9993;</button>`
@@ -171,6 +183,9 @@ function renderTable() {
       e.target.closest('tr').classList.toggle('selected-row', e.target.checked);
     });
   });
+  tbody.querySelectorAll('.action-btn.call-btn').forEach(btn =>
+    btn.addEventListener('click', () => openCallModal(parseInt(btn.dataset.id))));
+
   tbody.querySelectorAll('.action-btn.edit').forEach(btn =>
     btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.id))));
   tbody.querySelectorAll('.action-btn.email').forEach(btn =>
@@ -192,6 +207,7 @@ function renderStats() {
   document.getElementById('statNew').textContent       = clients.filter(c => c.status === 'New Lead').length;
   document.getElementById('statContacted').textContent = clients.filter(c => c.status === 'Contacted' || c.status === 'Meeting Scheduled').length;
   document.getElementById('statClient').textContent    = clients.filter(c => c.status === 'Active Client').length;
+  document.getElementById('statNotCalled').textContent = clients.filter(c => !c.last_called).length;
 }
 
 function showTableLoading(on) {
@@ -229,6 +245,7 @@ function bindEvents() {
   document.getElementById('searchInput').addEventListener('input', applyFiltersAndRender);
   document.getElementById('statusFilter').addEventListener('change', applyFiltersAndRender);
   document.getElementById('sourceFilter').addEventListener('change', applyFiltersAndRender);
+  document.getElementById('callFilter').addEventListener('change', applyFiltersAndRender);
 
   document.getElementById('selectAll').addEventListener('change', e => {
     filteredClients.forEach(c => e.target.checked ? selectedIds.add(c.id) : selectedIds.delete(c.id));
@@ -282,6 +299,9 @@ function bindEvents() {
   // Export / Delete
   document.getElementById('exportBtn').addEventListener('click', exportCSV);
   document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
+
+  // Call modal
+  bindCallModal();
 
   // Notes modal
   document.getElementById('closeNotesModal').addEventListener('click', () => {
@@ -675,6 +695,74 @@ function copyEmailBody() {
   navigator.clipboard.writeText(body)
     .then(() => showToast('Copied to clipboard!', 'success'))
     .catch(() => showToast('Could not copy — please select and copy manually.', 'error'));
+}
+
+// ─── Call Modal ───────────────────────────────────────
+let callTargetId = null;
+
+function openCallModal(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  callTargetId = id;
+
+  document.getElementById('callModalTitle').textContent = `Call — ${c.first_name} ${c.last_name}`;
+  document.getElementById('callNotes').value = '';
+  document.getElementById('callOutcome').value = 'Contacted';
+  document.getElementById('callModal').style.display = 'flex';
+
+  // Dial immediately on mobile / FaceTime on desktop
+  if (c.phone) window.location.href = `tel:${c.phone}`;
+}
+
+function bindCallModal() {
+  document.getElementById('closeCallModal').addEventListener('click', () => {
+    document.getElementById('callModal').style.display = 'none';
+  });
+  document.getElementById('cancelCallModal').addEventListener('click', () => {
+    document.getElementById('callModal').style.display = 'none';
+  });
+  document.getElementById('saveCallBtn').addEventListener('click', saveCallLog);
+  document.getElementById('callModal').addEventListener('click', e => {
+    if (e.target.id === 'callModal') document.getElementById('callModal').style.display = 'none';
+  });
+}
+
+async function saveCallLog() {
+  if (!callTargetId) return;
+  const btn = document.getElementById('saveCallBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const outcome  = document.getElementById('callOutcome').value;
+  const newNotes = document.getElementById('callNotes').value.trim();
+  const now      = new Date().toISOString();
+
+  const c = clients.find(x => x.id === callTargetId);
+  const updatedNotes = newNotes
+    ? (c.notes ? c.notes + '\n\n' : '') + `[Call ${new Date().toLocaleDateString()}] ${newNotes}`
+    : c.notes;
+
+  const ok = await updateClientDB(callTargetId, {
+    status:      outcome,
+    last_called: now,
+    notes:       updatedNotes || null,
+  });
+
+  if (ok) {
+    const idx = clients.findIndex(x => x.id === callTargetId);
+    if (idx !== -1) {
+      clients[idx].status      = outcome;
+      clients[idx].last_called = now;
+      clients[idx].notes       = updatedNotes || null;
+    }
+    showToast('Call logged!', 'success');
+    applyFiltersAndRender();
+  }
+
+  btn.textContent = 'Save Call Log';
+  btn.disabled = false;
+  document.getElementById('callModal').style.display = 'none';
+  callTargetId = null;
 }
 
 // ─── Notes Modal ──────────────────────────────────────
