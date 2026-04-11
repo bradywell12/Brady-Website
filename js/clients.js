@@ -284,8 +284,9 @@ function bindEvents() {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
-    if (file?.name.endsWith('.csv')) parseCSV(file);
-    else showToast('Please upload a .csv file', 'error');
+    if (file?.name.endsWith('.vcf') || file?.name.endsWith('.vcard')) parseVCF(file);
+    else if (file?.name.endsWith('.csv')) parseCSV(file);
+    else showToast('Please upload a .vcf or .csv file', 'error');
   });
 
   // Email
@@ -447,7 +448,71 @@ function cancelImport() {
 
 function handleCSVFile(e) {
   const file = e.target.files[0];
-  if (file) parseCSV(file);
+  if (!file) return;
+  if (file.name.endsWith('.vcf') || file.name.endsWith('.vcard')) {
+    parseVCF(file);
+  } else {
+    parseCSV(file);
+  }
+}
+
+// ─── vCard (.vcf) Parser — handles iPhone/iCloud exports ─
+function parseVCF(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    // Split into individual vCards
+    const cards = text.split(/END:VCARD/i).filter(c => c.trim());
+
+    pendingImport = cards.map(card => {
+      const get = (field) => {
+        const regex = new RegExp(`^${field}[^:]*:(.+)$`, 'im');
+        const match = card.match(regex);
+        return match ? match[1].trim() : '';
+      };
+
+      // Name — try N field first (Last;First;Middle;;), then FN (full name)
+      let firstName = '', lastName = '';
+      const nField = get('N');
+      if (nField) {
+        const parts = nField.split(';');
+        lastName  = (parts[0] || '').trim();
+        firstName = (parts[1] || '').trim();
+      }
+      if (!firstName && !lastName) {
+        const fn = get('FN');
+        if (fn) {
+          const parts = fn.split(' ');
+          firstName = parts[0] || '';
+          lastName  = parts.slice(1).join(' ') || '';
+        }
+      }
+
+      // Phone — grab first TEL value
+      const telMatch = card.match(/^TEL[^:]*:(.+)$/im);
+      const phone = telMatch ? telMatch[1].trim().replace(/\s+/g, '') : '';
+
+      // Email — grab first EMAIL value
+      const emailMatch = card.match(/^EMAIL[^:]*:(.+)$/im);
+      const email = emailMatch ? emailMatch[1].trim().toLowerCase() : '';
+
+      // Company
+      const company = get('ORG').split(';')[0].trim();
+
+      // Title
+      const position = get('TITLE');
+
+      return { firstName, lastName, phone, email, company, position };
+    }).filter(c => c.firstName || c.lastName);
+
+    if (pendingImport.length === 0) {
+      showToast('No contacts found in this vCard file.', 'error');
+      return;
+    }
+
+    showPreview();
+  };
+  reader.readAsText(file);
 }
 
 function parseCSV(file) {
@@ -455,34 +520,71 @@ function parseCSV(file) {
   reader.onload = e => {
     const rows = parseCSVText(e.target.result);
     if (rows.length < 2) {
-      showToast('Could not read the file — make sure it is the LinkedIn Connections.csv export.', 'error');
+      showToast('Could not read the file — make sure it is a CSV file.', 'error');
       return;
     }
 
-    // LinkedIn header: First Name, Last Name, URL, Email Address, Company, Position, Connected On
     const header = rows[0].map(h => h.trim().toLowerCase().replace(/\s+/g, ' ').replace(/"/g, ''));
+
+    // Supports: LinkedIn, iPhone/iCloud, Google Contacts, or any generic CSV
     const idx = {
-      firstName: findCol(header, ['first name', 'firstname', 'first']),
-      lastName:  findCol(header, ['last name',  'lastname',  'last']),
-      email:     findCol(header, ['email address', 'email', 'e-mail']),
-      company:   findCol(header, ['company', 'organization']),
-      position:  findCol(header, ['position', 'title', 'job title']),
+      firstName: findCol(header, [
+        'first name', 'firstname', 'first',
+        'given name',                          // Google Contacts
+        'name'                                 // fallback single-name column
+      ]),
+      lastName: findCol(header, [
+        'last name', 'lastname', 'last',
+        'family name', 'surname',              // Google Contacts
+      ]),
+      phone: findCol(header, [
+        'phone', 'phone number', 'mobile', 'mobile phone',
+        'phone 1 - value', 'phone 2 - value', // Google Contacts
+        'home phone', 'work phone', 'iphone',
+        'primary phone',
+      ]),
+      email: findCol(header, [
+        'email address', 'email', 'e-mail',
+        'e-mail address',                      // Google Contacts
+        'email 1 - value',                     // Google Contacts
+      ]),
+      company: findCol(header, [
+        'company', 'organization', 'org',
+        'company name',
+      ]),
+      position: findCol(header, [
+        'position', 'title', 'job title', 'role', 'department',
+      ]),
     };
 
+    // If we still can't find a name column, show the raw headers to help debug
     if (idx.firstName === -1 && idx.lastName === -1) {
-      showToast('Could not find name columns. Make sure this is the LinkedIn Connections CSV.', 'error');
+      showToast(`Could not find a name column. Columns found: ${header.join(', ')}`, 'error');
       return;
     }
 
     pendingImport = rows.slice(1)
       .filter(r => r.some(c => c.trim() !== ''))
-      .map(r => ({
-        firstName: getCol(r, idx.firstName),
-        lastName:  getCol(r, idx.lastName),
-        email:     getCol(r, idx.email).toLowerCase(),
-        company:   getCol(r, idx.company),
-        position:  getCol(r, idx.position),
-      }))
+      .map(r => {
+        let firstName = getCol(r, idx.firstName);
+        let lastName  = getCol(r, idx.lastName);
+
+        // If only a single "Name" column exists, split on the first space
+        if (firstName && idx.lastName === -1) {
+          const parts = firstName.split(' ');
+          firstName = parts[0];
+          lastName  = parts.slice(1).join(' ');
+        }
+
+        return {
+          firstName,
+          lastName,
+          phone:    getCol(r, idx.phone),
+          email:    getCol(r, idx.email).toLowerCase(),
+          company:  getCol(r, idx.company),
+          position: getCol(r, idx.position),
+        };
+      })
       .filter(c => c.firstName || c.lastName);
 
     showPreview();
@@ -509,9 +611,9 @@ function showPreview() {
       <tr>
         <td>${escHtml(c.firstName)}</td>
         <td>${escHtml(c.lastName)}</td>
+        <td>${escHtml(c.phone)  || '<span style="color:#9ca3af">—</span>'}</td>
         <td>${escHtml(c.email)  || '<span style="color:#9ca3af">—</span>'}</td>
         <td>${escHtml(c.company)|| '<span style="color:#9ca3af">—</span>'}</td>
-        <td>${escHtml(c.position)||'<span style="color:#9ca3af">—</span>'}</td>
       </tr>`).join('')
     + (pendingImport.length > 100
       ? `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:.75rem">…and ${pendingImport.length - 100} more</td></tr>`
@@ -537,10 +639,10 @@ async function confirmImport() {
     .map(c => ({
       first_name: c.firstName,
       last_name:  c.lastName,
-      email:      c.email || null,
-      phone:      null,
+      email:      c.email    || null,
+      phone:      c.phone    || null,
       status:     'New Lead',
-      source:     'LinkedIn',
+      source:     c.company || c.position ? 'LinkedIn' : 'Manual Entry',
       notes:      [c.position, c.company].filter(Boolean).join(' at ') || null,
     }));
 

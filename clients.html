@@ -249,26 +249,24 @@ Financial Representative | Northwestern Mutual</textarea>
         <button class="modal-close" id="closeImportModal">&times;</button>
       </div>
       <div class="import-instructions">
-        <h4>How to export your LinkedIn connections:</h4>
+        <h4>Supported formats — upload any of these:</h4>
         <ol>
-          <li>Go to <strong>LinkedIn.com</strong> and click your profile picture</li>
-          <li>Go to <strong>Settings &amp; Privacy</strong></li>
-          <li>Click <strong>Data Privacy</strong> &rarr; <strong>Get a copy of your data</strong></li>
-          <li>Select <strong>"Connections"</strong> and click <strong>Request Archive</strong></li>
-          <li>LinkedIn will email you a download link (usually within 10 minutes)</li>
-          <li>Download and unzip the file — find <strong>Connections.csv</strong></li>
-          <li>Upload that file below</li>
+          <li><strong>iPhone / iCloud Contacts (.vcf):</strong> Go to iCloud.com → Contacts → gear icon → Select All → Export vCard → upload the .vcf file directly here</li>
+          <li><strong>LinkedIn (.csv):</strong> Settings &amp; Privacy → Data Privacy → Get a copy of your data → Connections → download Connections.csv</li>
+          <li><strong>Google Contacts (.csv):</strong> contacts.google.com → Export → Google CSV format</li>
+          <li><strong>Custom spreadsheet (.csv):</strong> Any CSV with First Name, Last Name, Phone, Email columns</li>
         </ol>
         <div class="import-tip">
-          <strong>Tip:</strong> LinkedIn's CSV includes First Name, Last Name, Email Address, Company, and Position. All available fields will be imported automatically.
+          <strong>Tip:</strong> You can upload .vcf or .csv — both work. Phone, email, and name are all imported automatically.
         </div>
       </div>
       <div class="import-drop-zone" id="dropZone">
         <div class="drop-icon">&#128196;</div>
-        <p>Drag &amp; drop your <strong>Connections.csv</strong> here</p>
+        <p>Drag &amp; drop your contacts file here</p>
+        <p class="drop-sub">Supports .vcf (iPhone) and .csv (LinkedIn, Google)</p>
         <p class="drop-sub">or</p>
         <label class="btn-primary" for="csvFileInput">Browse Files</label>
-        <input type="file" id="csvFileInput" accept=".csv" style="display:none;" />
+        <input type="file" id="csvFileInput" accept=".csv,.vcf" style="display:none;" />
       </div>
       <div class="import-preview" id="importPreview" style="display:none;">
         <h4>Preview (<span id="previewCount">0</span> contacts found)</h4>
@@ -278,9 +276,9 @@ Financial Representative | Northwestern Mutual</textarea>
               <tr>
                 <th>First Name</th>
                 <th>Last Name</th>
+                <th>Phone</th>
                 <th>Email</th>
                 <th>Company</th>
-                <th>Position</th>
               </tr>
             </thead>
             <tbody id="previewTableBody"></tbody>
