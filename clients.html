@@ -19,10 +19,14 @@
         <p class="login-sub">Brady Wells — Northwestern Mutual</p>
         <form id="loginForm">
           <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required autofocus />
+            <label>Username</label>
+            <input type="text" id="loginUsername" class="form-input" placeholder="Enter your username" required autofocus autocomplete="username" />
           </div>
-          <div id="loginError" style="display:none;color:#dc2626;font-size:0.85rem;margin-bottom:0.75rem;">Incorrect password. Try again.</div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required autocomplete="current-password" />
+          </div>
+          <div id="loginError" style="display:none;color:#dc2626;font-size:0.85rem;margin-bottom:0.75rem;">Incorrect username or password. Try again.</div>
           <button type="submit" class="btn-primary full-btn">Sign In</button>
         </form>
       </div>
@@ -373,27 +377,37 @@ Financial Representative | Northwestern Mutual</textarea>
       document.querySelector('.nav-links').classList.toggle('open');
     });
 
-    // ── Password Protection ──
-    const PORTAL_PASSWORD = 'brady2026';  // Change this to your own password
+    // ── Login Credentials — change these to whatever you want ──
+    const PORTAL_USERS = [
+      { username: 'brady',    password: 'brady2026'  },
+      // Add more users below if needed:
+      // { username: 'manager',  password: 'somepassword' },
+    ];
 
     function checkAuth() {
       return sessionStorage.getItem('bw_auth') === 'true';
     }
 
     function showPortal() {
-      document.getElementById('loginScreen').style.display  = 'none';
+      document.getElementById('loginScreen').style.display   = 'none';
       document.getElementById('portalContent').style.display = 'block';
     }
 
     function showLogin() {
-      document.getElementById('loginScreen').style.display  = 'flex';
+      document.getElementById('loginScreen').style.display   = 'flex';
       document.getElementById('portalContent').style.display = 'none';
     }
 
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const entered = document.getElementById('loginPassword').value;
-      if (entered === PORTAL_PASSWORD) {
+      const enteredUser = document.getElementById('loginUsername').value.trim().toLowerCase();
+      const enteredPass = document.getElementById('loginPassword').value;
+
+      const match = PORTAL_USERS.find(u =>
+        u.username.toLowerCase() === enteredUser && u.password === enteredPass
+      );
+
+      if (match) {
         sessionStorage.setItem('bw_auth', 'true');
         showPortal();
       } else {
