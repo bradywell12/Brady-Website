@@ -134,6 +134,9 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
   color: #fff;
   font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  line-height: 1;
 }
 .nav-links {
   display: flex;
