@@ -10,25 +10,59 @@
 </head>
 <body class="crm-body">
 
-  <!-- LOGIN SCREEN -->
+  <!-- AUTH SCREEN -->
   <div id="loginScreen" style="display:none;">
     <div class="login-wrap">
       <div class="login-card">
-        <div class="login-logo">BW</div>
-        <h2 class="login-title">Client Portal</h2>
-        <p class="login-sub">Brady Wells — Northwestern Mutual</p>
+        <div class="login-logo">FA</div>
+        <h2 class="login-title">Advisor Portal</h2>
+        <p class="login-sub">Financial Advisor Client Management</p>
+
+        <!-- Tab Toggle -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+          <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Create Account</button>
+        </div>
+
+        <!-- Login Form -->
         <form id="loginForm">
           <div class="form-group">
-            <label>Username</label>
-            <input type="text" id="loginUsername" class="form-input" placeholder="Enter your username" required autofocus autocomplete="username" />
+            <label>Email</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="you@email.com" required autocomplete="email" />
           </div>
           <div class="form-group">
             <label>Password</label>
-            <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required autocomplete="current-password" />
+            <input type="password" id="loginPassword" class="form-input" placeholder="Your password" required autocomplete="current-password" />
           </div>
-          <div id="loginError" style="display:none;color:#dc2626;font-size:0.85rem;margin-bottom:0.75rem;">Incorrect username or password. Try again.</div>
-          <button type="submit" class="btn-primary full-btn">Sign In</button>
+          <div id="loginError" class="auth-error" style="display:none;"></div>
+          <button type="submit" class="btn-primary full-btn" id="loginBtn">Sign In</button>
         </form>
+
+        <!-- Signup Form -->
+        <form id="signupForm" style="display:none;">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" id="signupFirst" class="form-input" placeholder="Brady" required />
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" id="signupLast" class="form-input" placeholder="Wells" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="signupEmail" class="form-input" placeholder="you@email.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="signupPassword" class="form-input" placeholder="Min 6 characters" required autocomplete="new-password" />
+          </div>
+          <div id="signupError" class="auth-error" style="display:none;"></div>
+          <div id="signupSuccess" class="auth-success" style="display:none;">Account created! Check your email to confirm, then sign in.</div>
+          <button type="submit" class="btn-primary full-btn" id="signupBtn">Create Account</button>
+        </form>
+
       </div>
     </div>
   </div>
@@ -56,11 +90,12 @@
       <div class="crm-header-inner">
         <div>
           <h1 class="crm-title">Client Management</h1>
-          <p class="crm-subtitle">Manage your prospective clients, track outreach, and grow your book of business.</p>
+          <p class="crm-subtitle">Welcome back, <span id="advisorName">Advisor</span> — manage your clients, track outreach, and grow your book of business.</p>
         </div>
         <div class="crm-header-actions">
           <button class="btn-primary" id="openAddModal">+ Add Client</button>
-          <button class="btn-secondary" id="openImportModal">Import LinkedIn CSV</button>
+          <button class="btn-secondary" id="openImportModal">Import Contacts</button>
+          <button class="btn-logout" id="logoutBtn">Sign Out</button>
         </div>
       </div>
     </div>
@@ -377,20 +412,14 @@ Financial Representative | Northwestern Mutual</textarea>
       document.querySelector('.nav-links').classList.toggle('open');
     });
 
-    // ── Login Credentials — change these to whatever you want ──
-    const PORTAL_USERS = [
-      { username: 'brady',    password: 'brady2026'  },
-      // Add more users below if needed:
-      // { username: 'manager',  password: 'somepassword' },
-    ];
-
-    function checkAuth() {
-      return sessionStorage.getItem('bw_auth') === 'true';
-    }
-
-    function showPortal() {
+    // ── Supabase Auth ──
+    function showPortal(user) {
       document.getElementById('loginScreen').style.display   = 'none';
       document.getElementById('portalContent').style.display = 'block';
+      // Show advisor's name from their metadata
+      const meta = user.user_metadata || {};
+      const name = [meta.first_name, meta.last_name].filter(Boolean).join(' ') || user.email;
+      document.getElementById('advisorName').textContent = name;
     }
 
     function showLogin() {
@@ -398,31 +427,78 @@ Financial Representative | Northwestern Mutual</textarea>
       document.getElementById('portalContent').style.display = 'none';
     }
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    function switchTab(tab) {
+      document.getElementById('loginForm').style.display  = tab === 'login'  ? 'block' : 'none';
+      document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+      document.getElementById('tabLogin').classList.toggle('active',  tab === 'login');
+      document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+    }
+
+    // Sign In
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const enteredUser = document.getElementById('loginUsername').value.trim().toLowerCase();
-      const enteredPass = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginBtn');
+      btn.textContent = 'Signing in...'; btn.disabled = true;
 
-      const match = PORTAL_USERS.find(u =>
-        u.username.toLowerCase() === enteredUser && u.password === enteredPass
-      );
+      const { error } = await db.auth.signInWithPassword({
+        email:    document.getElementById('loginEmail').value.trim(),
+        password: document.getElementById('loginPassword').value,
+      });
 
-      if (match) {
-        sessionStorage.setItem('bw_auth', 'true');
-        showPortal();
+      if (error) {
+        const el = document.getElementById('loginError');
+        el.textContent = error.message;
+        el.style.display = 'block';
+      }
+      btn.textContent = 'Sign In'; btn.disabled = false;
+    });
+
+    // Sign Up
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('signupBtn');
+      btn.textContent = 'Creating account...'; btn.disabled = true;
+
+      const { error } = await db.auth.signUp({
+        email:    document.getElementById('signupEmail').value.trim(),
+        password: document.getElementById('signupPassword').value,
+        options: { data: {
+          first_name: document.getElementById('signupFirst').value.trim(),
+          last_name:  document.getElementById('signupLast').value.trim(),
+        }}
+      });
+
+      if (error) {
+        const el = document.getElementById('signupError');
+        el.textContent = error.message;
+        el.style.display = 'block';
       } else {
-        document.getElementById('loginError').style.display = 'block';
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('loginPassword').focus();
+        document.getElementById('signupSuccess').style.display = 'block';
+        document.getElementById('signupError').style.display   = 'none';
+      }
+      btn.textContent = 'Create Account'; btn.disabled = false;
+    });
+
+    // Sign Out
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await db.auth.signOut();
+      showLogin();
+    });
+
+    // Listen for auth state changes (handles login/logout automatically)
+    db.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        showPortal(session.user);
+      } else {
+        showLogin();
       }
     });
 
-    // Check on page load
-    if (checkAuth()) {
-      showPortal();
-    } else {
-      showLogin();
-    }
+    // Check session on page load
+    db.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) showPortal(session.user);
+      else showLogin();
+    });
   </script>
 </body>
 </html>

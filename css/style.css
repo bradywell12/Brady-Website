@@ -427,6 +427,13 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .login-title { font-size: 1.6rem; color: var(--navy); margin-bottom: 0.25rem; }
 .login-sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.75rem; }
 .login-card .form-group { text-align: left; }
+.auth-tabs { display: flex; gap: 0; margin-bottom: 1.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.auth-tab { flex: 1; padding: 0.65rem; background: #fff; border: none; font-size: 0.88rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+.auth-tab.active { background: var(--navy); color: #fff; }
+.auth-error { color: #dc2626; font-size: 0.83rem; margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; background: #fef2f2; border-radius: var(--radius-sm); border: 1px solid #fca5a5; }
+.auth-success { color: #16a34a; font-size: 0.83rem; margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; background: #f0fdf4; border-radius: var(--radius-sm); border: 1px solid #86efac; }
+.btn-logout { padding: 0.6rem 1.2rem; background: transparent; color: rgba(255,255,255,0.75); font-size: 0.85rem; font-weight: 600; border: 1.5px solid rgba(255,255,255,0.3); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.btn-logout:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.6); }
 
 /* ===== CRM BODY ===== */
 .crm-body { background: var(--bg-light); }

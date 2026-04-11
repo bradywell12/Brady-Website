@@ -36,9 +36,10 @@ async function loadClients() {
 }
 
 async function insertClient(fields) {
+  const { data: { user } } = await db.auth.getUser();
   const { data, error } = await db
     .from('clients')
-    .insert([fields])
+    .insert([{ ...fields, user_id: user.id }])
     .select()
     .single();
 
@@ -67,9 +68,11 @@ async function deleteClientDB(id) {
 }
 
 async function bulkInsertClients(rows) {
+  const { data: { user } } = await db.auth.getUser();
+  const rowsWithUser = rows.map(r => ({ ...r, user_id: user.id }));
   const { data, error } = await db
     .from('clients')
-    .insert(rows)
+    .insert(rowsWithUser)
     .select();
 
   if (error) { showToast('Import error: ' + error.message, 'error'); return []; }
