@@ -488,8 +488,9 @@ function parseVCF(file) {
         }
       }
 
-      // Phone — grab first TEL value
-      const telMatch = card.match(/^TEL[^:]*:(.+)$/im);
+      // Phone — grab first TEL value (handles all iPhone formats)
+      // e.g. TEL:, TEL;type=CELL:, TEL;TYPE=HOME:, item1.TEL:, TEL;PREF:
+      const telMatch = card.match(/(?:^|\n)(?:item\d+\.)?TEL[^:\n]*:(.+)/i);
       const phone = telMatch ? telMatch[1].trim().replace(/\s+/g, '') : '';
 
       // Email — grab first EMAIL value
