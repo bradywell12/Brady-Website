@@ -572,7 +572,6 @@ function parseCSV(file) {
     }
 
     const header = rows[0].map(h => h.trim().toLowerCase().replace(/\s+/g, ' ').replace(/"/g, ''));
-    console.log('CSV headers detected:', header);
 
     // Supports: LinkedIn, iPhone/iCloud, Google Contacts, or any generic CSV
     const idx = {
@@ -586,18 +585,19 @@ function parseCSV(file) {
         'family name', 'surname',              // Google Contacts
       ]),
       phone: findCol(header, [
-        'phone', 'phone number', 'mobile', 'mobile phone',
+        'mobile phone', 'mobile', 'cell phone', 'cell',
+        'home phone', 'business phone', 'work phone',
+        'phone', 'phone number',
         'phone 1 - value', 'phone 2 - value', // Google Contacts
-        'home phone', 'work phone', 'iphone',
-        'primary phone',
+        'iphone', 'primary phone',
       ]),
       email: findCol(header, [
         'email address', 'email', 'e-mail',
         'e-mail address',                      // Google Contacts
         'email 1 - value',                     // Google Contacts
       ]),
-      company:    findCol(header, ['company', 'organization', 'org', 'company name']),
-      position:   findCol(header, ['position', 'title', 'job title', 'role', 'department']),
+      company:    findCol(header, ['employer', 'company', 'organization', 'org', 'company name']),
+      position:   findCol(header, ['job title', 'position', 'title', 'role', 'department']),
       marketType: findCol(header, ['market type', 'market', 'category', 'type']),
     };
 
