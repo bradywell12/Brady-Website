@@ -159,7 +159,14 @@ function renderTable() {
         ? `<a href="mailto:${escHtml(c.email)}" style="color:var(--accent)">${escHtml(c.email)}</a>`
         : '<span style="color:#9ca3af">—</span>'}</td>
       <td>${statusBadge(c.status)}</td>
-      <td>${marketBadge(c.market_type)}</td>
+      <td>
+        <select class="market-inline-select ${c.market_type ? 'has-value' : ''}" data-id="${c.id}">
+          <option value="">—</option>
+          <option value="Young Professional" ${c.market_type === 'Young Professional' ? 'selected' : ''}>Young Professional</option>
+          <option value="Established"        ${c.market_type === 'Established'        ? 'selected' : ''}>Established</option>
+          <option value="Retirement"         ${c.market_type === 'Retirement'         ? 'selected' : ''}>Retirement</option>
+        </select>
+      </td>
       <td style="white-space:nowrap;font-size:0.82rem">
         ${c.last_called
           ? `<span style="color:#16a34a;font-weight:600">&#10003; ${new Date(c.last_called).toLocaleDateString()}</span>`
@@ -210,6 +217,16 @@ function renderTable() {
     }));
   tbody.querySelectorAll('.action-btn.delete').forEach(btn =>
     btn.addEventListener('click', () => deleteClient(parseInt(btn.dataset.id))));
+
+  tbody.querySelectorAll('.market-inline-select').forEach(sel =>
+    sel.addEventListener('change', async e => {
+      const id = parseInt(e.target.dataset.id);
+      const val = e.target.value || null;
+      await updateClientDB(id, { market_type: val });
+      const c = clients.find(x => x.id === id);
+      if (c) c.market_type = val;
+      e.target.className = 'market-inline-select' + (val ? ' has-value' : '');
+    }));
 }
 
 function renderStats() {
