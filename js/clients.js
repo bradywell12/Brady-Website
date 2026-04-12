@@ -304,6 +304,9 @@ function bindEvents() {
   document.getElementById('exportBtn').addEventListener('click', exportCSV);
   document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
 
+  // Fix names button
+  document.getElementById('fixNamesBtn').addEventListener('click', fixParenthesesInNames);
+
   // Call modal
   bindCallModal();
 
@@ -520,7 +523,8 @@ function parseVCF(file) {
       // Title
       const position = get('TITLE');
 
-      return { firstName, lastName, phone, email, company, position };
+      const cleaned = cleanName(firstName, lastName);
+      return { firstName: cleaned.first, lastName: cleaned.last, phone, email, company, position };
     }).filter(c => c.firstName || c.lastName);
 
     if (pendingImport.length === 0) {
@@ -594,13 +598,14 @@ function parseCSV(file) {
           lastName  = parts.slice(1).join(' ');
         }
 
+        const cleaned = cleanName(firstName, lastName);
         return {
-          firstName,
-          lastName,
-          phone:    getCol(r, idx.phone),
-          email:    getCol(r, idx.email).toLowerCase(),
-          company:  getCol(r, idx.company),
-          position: getCol(r, idx.position),
+          firstName: cleaned.first,
+          lastName:  cleaned.last,
+          phone:     getCol(r, idx.phone),
+          email:     getCol(r, idx.email).toLowerCase(),
+          company:   getCol(r, idx.company),
+          position:  getCol(r, idx.position),
         };
       })
       .filter(c => c.firstName || c.lastName);
@@ -1092,6 +1097,52 @@ function showToast(msg, type = '') {
   el.className = 'toast show' + (type ? ' ' + type : '');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+}
+
+// ─── Fix Parentheses in Existing Names ───────────────
+async function fixParenthesesInNames() {
+  const affected = clients.filter(c => /\(.*\)/.test(c.first_name || ''));
+  if (affected.length === 0) {
+    showToast('No names with () found — all clean!', 'info');
+    return;
+  }
+
+  if (!confirm(`Found ${affected.length} contact(s) with () in their first name. Move the () to the last name field?`)) return;
+
+  let fixed = 0;
+  for (const c of affected) {
+    const cleaned = cleanName(c.first_name, c.last_name);
+    const ok = await updateClientDB(c.id, {
+      first_name: cleaned.first,
+      last_name:  cleaned.last,
+    });
+    if (ok) {
+      const idx = clients.findIndex(x => x.id === c.id);
+      if (idx !== -1) {
+        clients[idx].first_name = cleaned.first;
+        clients[idx].last_name  = cleaned.last;
+      }
+      fixed++;
+    }
+  }
+
+  applyFiltersAndRender();
+  showToast(`Fixed ${fixed} contact${fixed !== 1 ? 's' : ''}!`, 'success');
+}
+
+// ─── Name Cleanup ─────────────────────────────────────
+// Moves parenthetical content from first name into last name
+// e.g. "Wayne (Mazda)" → first: "Wayne", last: "(Mazda)"
+// e.g. "Matt (Mazda) Smith" → first: "Matt", last: "Smith (Mazda)"
+function cleanName(firstName, lastName) {
+  const parenMatch = (firstName || '').match(/^(.*?)\s*(\(.*\))\s*$/);
+  if (parenMatch) {
+    const cleanFirst = parenMatch[1].trim();
+    const paren      = parenMatch[2].trim();
+    const cleanLast  = [lastName, paren].filter(Boolean).join(' ').trim();
+    return { first: cleanFirst, last: cleanLast };
+  }
+  return { first: firstName || '', last: lastName || '' };
 }
 
 // ─── Utility ──────────────────────────────────────────
