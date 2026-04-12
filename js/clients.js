@@ -307,6 +307,9 @@ function bindEvents() {
   // Fix names button
   document.getElementById('fixNamesBtn').addEventListener('click', fixParenthesesInNames);
 
+  // Remove duplicates button
+  document.getElementById('removeDupsBtn').addEventListener('click', removeDuplicates);
+
   // Call modal
   bindCallModal();
 
@@ -1097,6 +1100,40 @@ function showToast(msg, type = '') {
   el.className = 'toast show' + (type ? ' ' + type : '');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+}
+
+// ─── Remove Duplicates ────────────────────────────────
+async function removeDuplicates() {
+  const seen    = new Map();
+  const toDelete = [];
+
+  // Sort by created_at so we keep the oldest entry
+  const sorted = [...clients].sort((a, b) =>
+    new Date(a.created_at) - new Date(b.created_at)
+  );
+
+  for (const c of sorted) {
+    const key = `${(c.first_name || '').toLowerCase().trim()}|${(c.last_name || '').toLowerCase().trim()}|${(c.phone || '').replace(/\D/g, '')}`;
+    if (seen.has(key)) {
+      toDelete.push(c.id);
+    } else {
+      seen.set(key, c.id);
+    }
+  }
+
+  if (toDelete.length === 0) {
+    showToast('No duplicates found — all clean!', 'info');
+    return;
+  }
+
+  if (!confirm(`Found ${toDelete.length} duplicate(s). Delete them and keep the originals?`)) return;
+
+  const { error } = await db.from('clients').delete().in('id', toDelete);
+  if (error) { showToast('Error removing duplicates: ' + error.message, 'error'); return; }
+
+  clients = clients.filter(c => !toDelete.includes(c.id));
+  applyFiltersAndRender();
+  showToast(`Removed ${toDelete.length} duplicate${toDelete.length !== 1 ? 's' : ''}!`, 'success');
 }
 
 // ─── Fix Parentheses in Existing Names ───────────────
