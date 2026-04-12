@@ -585,11 +585,12 @@ function parseCSV(file) {
         'family name', 'surname',              // Google Contacts
       ]),
       phone: findCol(header, [
+        'primary phone type', 'primary phone',
         'mobile phone', 'mobile', 'cell phone', 'cell',
         'home phone', 'business phone', 'work phone',
         'phone', 'phone number',
         'phone 1 - value', 'phone 2 - value', // Google Contacts
-        'iphone', 'primary phone',
+        'iphone',
       ]),
       email: findCol(header, [
         'email address', 'email', 'e-mail',
