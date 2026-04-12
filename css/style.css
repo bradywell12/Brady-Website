@@ -541,7 +541,7 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .clients-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .clients-table thead { background: var(--bg-light); border-bottom: 2px solid var(--border); }
 .clients-table th {
-  padding: 0.9rem 1rem;
+  padding: 0.9rem 0.75rem;
   text-align: left;
   font-size: 0.78rem;
   font-weight: 700;
@@ -554,10 +554,12 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .clients-table th.sortable:hover { color: var(--navy); }
 .sort-arrow { opacity: 0.4; margin-left: 0.2rem; }
 .clients-table td {
-  padding: 0.85rem 1rem;
+  padding: 0.85rem 0.75rem;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
+.clients-table th:last-child,
+.clients-table td:last-child { min-width: 120px; }
 .clients-table tbody tr:hover { background: var(--bg-light); }
 .clients-table tbody tr:last-child td { border-bottom: none; }
 .clients-table input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--navy); }
@@ -591,7 +593,7 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .source-linkedin { background: #e0f0ff; color: #0077b5; border-color: #93c5fd; }
 
 /* ROW ACTIONS */
-.row-actions { display: flex; gap: 0.4rem; align-items: center; }
+.row-actions { display: flex; gap: 0.4rem; align-items: center; flex-wrap: nowrap; white-space: nowrap; }
 .action-btn {
   background: none;
   border: none;
