@@ -1145,7 +1145,11 @@ async function removeDuplicates() {
   if (!confirm(`Found ${toDelete.length} duplicate(s). Delete them and keep the originals?`)) return;
 
   const { error } = await db.from('clients').delete().in('id', toDelete);
-  if (error) { showToast('Error removing duplicates: ' + error.message, 'error'); return; }
+  if (error) {
+    console.error('Delete error:', error);
+    showToast('Error: ' + error.message, 'error');
+    return;
+  }
 
   clients = clients.filter(c => !toDelete.includes(c.id));
   applyFiltersAndRender();
