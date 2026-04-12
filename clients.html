@@ -613,10 +613,12 @@ Financial Representative | Northwestern Mutual</textarea>
     db.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         showPortal(session.user);
-        showTableLoading(true);
-        await loadClients();
-        showTableLoading(false);
-        applyFiltersAndRender();
+        if (event === 'SIGNED_IN') {
+          showTableLoading(true);
+          await loadClients();
+          showTableLoading(false);
+          applyFiltersAndRender();
+        }
       } else {
         showLogin();
       }
