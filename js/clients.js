@@ -94,21 +94,24 @@ function applyFiltersAndRender() {
   const statusF = document.getElementById('statusFilter').value;
   const sourceF = document.getElementById('sourceFilter').value;
 
-  const callF = document.getElementById('callFilter').value;
+  const callF   = document.getElementById('callFilter').value;
+  const marketF = document.getElementById('marketFilter').value;
 
   filteredClients = clients.filter(c => {
     const matchSearch =
       !search ||
-      (c.first_name || '').toLowerCase().includes(search) ||
-      (c.last_name  || '').toLowerCase().includes(search) ||
-      (c.email      || '').toLowerCase().includes(search) ||
-      (c.phone      || '').toLowerCase().includes(search);
+      (c.first_name   || '').toLowerCase().includes(search) ||
+      (c.last_name    || '').toLowerCase().includes(search) ||
+      (c.email        || '').toLowerCase().includes(search) ||
+      (c.phone        || '').toLowerCase().includes(search) ||
+      (c.market_type  || '').toLowerCase().includes(search);
     const matchStatus = !statusF || c.status === statusF;
     const matchSource = !sourceF || c.source === sourceF;
     const matchCall   = !callF ||
       (callF === 'not_called' && !c.last_called) ||
       (callF === 'called'     &&  c.last_called);
-    return matchSearch && matchStatus && matchSource && matchCall;
+    const matchMarket = !marketF || c.market_type === marketF;
+    return matchSearch && matchStatus && matchSource && matchCall && matchMarket;
   });
 
   // Sort
@@ -153,6 +156,7 @@ function renderTable() {
         ? `<a href="mailto:${escHtml(c.email)}" style="color:var(--accent)">${escHtml(c.email)}</a>`
         : '<span style="color:#9ca3af">—</span>'}</td>
       <td>${statusBadge(c.status)}</td>
+      <td>${marketBadge(c.market_type)}</td>
       <td style="white-space:nowrap;font-size:0.82rem">
         ${c.last_called
           ? `<span style="color:#16a34a;font-weight:600">&#10003; ${new Date(c.last_called).toLocaleDateString()}</span>`
@@ -238,6 +242,17 @@ function statusBadge(status) {
   return `<span class="status-badge ${map[status] || ''}">${escHtml(status || 'Unknown')}</span>`;
 }
 
+function marketBadge(market) {
+  if (!market) return '<span style="color:#9ca3af;font-size:0.78rem">—</span>';
+  const map = {
+    'Young Personal': 'market-young',
+    'Established':    'market-established',
+    'Retirement':     'market-retirement',
+    'Business Owner': 'market-business',
+  };
+  return `<span class="market-badge ${map[market] || ''}">${escHtml(market)}</span>`;
+}
+
 function sourceBadge(source) {
   const isLinkedIn = source === 'LinkedIn';
   return `<span class="source-badge ${isLinkedIn ? 'source-linkedin' : ''}">${escHtml(source || 'Unknown')}</span>`;
@@ -249,6 +264,7 @@ function bindEvents() {
   document.getElementById('statusFilter').addEventListener('change', applyFiltersAndRender);
   document.getElementById('sourceFilter').addEventListener('change', applyFiltersAndRender);
   document.getElementById('callFilter').addEventListener('change', applyFiltersAndRender);
+  document.getElementById('marketFilter').addEventListener('change', applyFiltersAndRender);
 
   document.getElementById('selectAll').addEventListener('change', e => {
     filteredClients.forEach(c => e.target.checked ? selectedIds.add(c.id) : selectedIds.delete(c.id));
@@ -351,9 +367,10 @@ function openEditModal(id) {
   document.getElementById('cfLastName').value  = c.last_name  || '';
   document.getElementById('cfPhone').value     = c.phone      || '';
   document.getElementById('cfEmail').value     = c.email      || '';
-  document.getElementById('cfStatus').value    = c.status     || 'New Lead';
-  document.getElementById('cfSource').value    = c.source     || 'Manual Entry';
-  document.getElementById('cfNotes').value     = c.notes      || '';
+  document.getElementById('cfStatus').value    = c.status      || 'New Lead';
+  document.getElementById('cfSource').value    = c.source      || 'Manual Entry';
+  document.getElementById('cfMarket').value    = c.market_type || '';
+  document.getElementById('cfNotes').value     = c.notes       || '';
   document.getElementById('addModal').style.display = 'flex';
 }
 
@@ -367,13 +384,14 @@ async function saveClient(e) {
   const idVal = document.getElementById('editClientId').value;
 
   const fields = {
-    first_name: document.getElementById('cfFirstName').value.trim(),
-    last_name:  document.getElementById('cfLastName').value.trim(),
-    phone:      document.getElementById('cfPhone').value.trim(),
-    email:      document.getElementById('cfEmail').value.trim().toLowerCase(),
-    status:     document.getElementById('cfStatus').value,
-    source:     document.getElementById('cfSource').value,
-    notes:      document.getElementById('cfNotes').value.trim(),
+    first_name:  document.getElementById('cfFirstName').value.trim(),
+    last_name:   document.getElementById('cfLastName').value.trim(),
+    phone:       document.getElementById('cfPhone').value.trim(),
+    email:       document.getElementById('cfEmail').value.trim().toLowerCase(),
+    status:      document.getElementById('cfStatus').value,
+    source:      document.getElementById('cfSource').value,
+    market_type: document.getElementById('cfMarket').value || null,
+    notes:       document.getElementById('cfNotes').value.trim(),
   };
 
   btn.textContent = 'Saving...';
@@ -573,13 +591,9 @@ function parseCSV(file) {
         'e-mail address',                      // Google Contacts
         'email 1 - value',                     // Google Contacts
       ]),
-      company: findCol(header, [
-        'company', 'organization', 'org',
-        'company name',
-      ]),
-      position: findCol(header, [
-        'position', 'title', 'job title', 'role', 'department',
-      ]),
+      company:    findCol(header, ['company', 'organization', 'org', 'company name']),
+      position:   findCol(header, ['position', 'title', 'job title', 'role', 'department']),
+      marketType: findCol(header, ['market type', 'market', 'category', 'type']),
     };
 
     // If we still can't find a name column, show the raw headers to help debug
@@ -603,12 +617,13 @@ function parseCSV(file) {
 
         const cleaned = cleanName(firstName, lastName);
         return {
-          firstName: cleaned.first,
-          lastName:  cleaned.last,
-          phone:     getCol(r, idx.phone),
-          email:     getCol(r, idx.email).toLowerCase(),
-          company:   getCol(r, idx.company),
-          position:  getCol(r, idx.position),
+          firstName:  cleaned.first,
+          lastName:   cleaned.last,
+          phone:      getCol(r, idx.phone),
+          email:      getCol(r, idx.email).toLowerCase(),
+          company:    getCol(r, idx.company),
+          position:   getCol(r, idx.position),
+          marketType: getCol(r, idx.marketType),
         };
       })
       .filter(c => c.firstName || c.lastName);
@@ -663,13 +678,14 @@ async function confirmImport() {
       return true;
     })
     .map(c => ({
-      first_name: c.firstName,
-      last_name:  c.lastName,
-      email:      c.email    || null,
-      phone:      c.phone    || null,
-      status:     'New Lead',
-      source:     c.company || c.position ? 'LinkedIn' : 'Manual Entry',
-      notes:      [c.position, c.company].filter(Boolean).join(' at ') || null,
+      first_name:  c.firstName,
+      last_name:   c.lastName,
+      email:       c.email      || null,
+      phone:       c.phone      || null,
+      status:      'New Lead',
+      source:      c.company || c.position ? 'LinkedIn' : 'Manual Entry',
+      market_type: c.marketType || null,
+      notes:       [c.position, c.company].filter(Boolean).join(' at ') || null,
     }));
 
   if (newRows.length === 0) {

@@ -176,6 +176,13 @@
             <option value="not_called">Not Called Yet</option>
             <option value="called">Already Called</option>
           </select>
+          <select id="marketFilter" class="crm-select">
+            <option value="">All Markets</option>
+            <option value="Young Personal">Young Personal</option>
+            <option value="Established">Established</option>
+            <option value="Retirement">Retirement</option>
+            <option value="Business Owner">Business Owner</option>
+          </select>
         </div>
         <div class="crm-action-group">
           <button class="btn-outline" id="emailSelectedBtn" disabled>Email Selected (<span id="selectedCount">0</span>)</button>
@@ -232,6 +239,7 @@ Financial Representative | Northwestern Mutual</textarea>
               <th>Phone</th>
               <th>Email</th>
               <th class="sortable" data-col="status">Status <span class="sort-arrow">&#8597;</span></th>
+              <th class="sortable" data-col="market_type">Market <span class="sort-arrow">&#8597;</span></th>
               <th class="sortable" data-col="last_called">Last Called <span class="sort-arrow">&#8597;</span></th>
               <th class="sortable col-source" data-col="source">Source <span class="sort-arrow">&#8597;</span></th>
               <th>Actions</th>
@@ -368,6 +376,18 @@ Financial Representative | Northwestern Mutual</textarea>
               <option value="LinkedIn">LinkedIn</option>
               <option value="Website Contact Form">Website Contact Form</option>
               <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Market Type</label>
+            <select id="cfMarket" class="form-input">
+              <option value="">-- Select --</option>
+              <option value="Young Personal">Young Personal (18-24)</option>
+              <option value="Established">Established (25-49)</option>
+              <option value="Retirement">Retirement (50+)</option>
+              <option value="Business Owner">Business Owner</option>
             </select>
           </div>
         </div>
