@@ -1151,7 +1151,8 @@ async function removeDuplicates() {
     return;
   }
 
-  clients = clients.filter(c => !toDelete.includes(c.id));
+  // Reload from Supabase to ensure UI is in sync
+  await loadClients();
   applyFiltersAndRender();
   showToast(`Removed ${toDelete.length} duplicate${toDelete.length !== 1 ? 's' : ''}!`, 'success');
 }
