@@ -245,16 +245,23 @@ function statusBadge(status) {
   return `<span class="status-badge ${map[status] || ''}">${escHtml(status || 'Unknown')}</span>`;
 }
 
+function normalizeMarket(raw) {
+  if (!raw) return null;
+  const m = raw.toLowerCase();
+  if (m.includes('young')) return 'Young Professional';
+  if (m.includes('established')) return 'Established';
+  if (m.includes('retirement')) return 'Retirement';
+  return null;
+}
+
 function marketBadge(market) {
   if (!market) return '<span style="color:#9ca3af;font-size:0.78rem">—</span>';
-  const m = market.toLowerCase();
-  let cls = '';
-  let label = market;
-  if (m.includes('young')) { cls = 'market-young'; label = 'Young Professional'; }
-  else if (m.includes('established')) { cls = 'market-established'; label = 'Established'; }
-  else if (m.includes('retirement')) { cls = 'market-retirement'; label = 'Retirement'; }
-  else if (m.includes('business')) { cls = 'market-business'; label = 'Business Owner'; }
-  return `<span class="market-badge ${cls}" title="${escHtml(market)}">${escHtml(label)}</span>`;
+  const map = {
+    'Young Professional': 'market-young',
+    'Established':        'market-established',
+    'Retirement':         'market-retirement',
+  };
+  return `<span class="market-badge ${map[market] || ''}">${escHtml(market)}</span>`;
 }
 
 function sourceBadge(source) {
@@ -690,7 +697,7 @@ async function confirmImport() {
       phone:       c.phone      || null,
       status:      'New Lead',
       source:      c.company || c.position ? 'LinkedIn' : 'Manual Entry',
-      market_type: c.marketType || null,
+      market_type: normalizeMarket(c.marketType),
       notes:       [c.position, c.company].filter(Boolean).join(' at ') || null,
     }));
 
