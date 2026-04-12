@@ -1113,11 +1113,27 @@ async function removeDuplicates() {
   );
 
   for (const c of sorted) {
-    const key = `${(c.first_name || '').toLowerCase().trim()}|${(c.last_name || '').toLowerCase().trim()}|${(c.phone || '').replace(/\D/g, '')}`;
-    if (seen.has(key)) {
+    const phone = (c.phone || '').replace(/\D/g, '');
+    const email = (c.email || '').toLowerCase().trim();
+    const first = (c.first_name || '').toLowerCase().trim();
+    const last  = (c.last_name  || '').toLowerCase().trim();
+
+    // Match on name+phone OR name+email OR phone+email
+    const keyNamePhone = `${first}|${last}|${phone}`;
+    const keyNameEmail = `${first}|${last}|${email}`;
+    const keyPhoneEmail = `${phone}|${email}`;
+
+    const isDup =
+      (phone && seen.has(keyNamePhone)) ||
+      (email && seen.has(keyNameEmail)) ||
+      (phone && email && seen.has(keyPhoneEmail));
+
+    if (isDup) {
       toDelete.push(c.id);
     } else {
-      seen.set(key, c.id);
+      if (phone) seen.set(keyNamePhone, c.id);
+      if (email) seen.set(keyNameEmail, c.id);
+      if (phone && email) seen.set(keyPhoneEmail, c.id);
     }
   }
 
