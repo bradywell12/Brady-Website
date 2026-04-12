@@ -572,6 +572,7 @@ function parseCSV(file) {
     }
 
     const header = rows[0].map(h => h.trim().toLowerCase().replace(/\s+/g, ' ').replace(/"/g, ''));
+    console.log('CSV headers detected:', header);
 
     // Supports: LinkedIn, iPhone/iCloud, Google Contacts, or any generic CSV
     const idx = {
