@@ -307,6 +307,9 @@ function bindEvents() {
   // Call modal
   bindCallModal();
 
+  // Outreach tab
+  bindOutreachTab();
+
   // Notes modal
   document.getElementById('closeNotesModal').addEventListener('click', () => {
     document.getElementById('notesModal').style.display = 'none';
@@ -911,6 +914,174 @@ function exportCSV() {
   a.click();
   URL.revokeObjectURL(url);
   showToast(`Exported ${data.length} client(s)`, 'success');
+}
+
+// ─── Portal Tab Switching ─────────────────────────────
+function switchPortalTab(tab) {
+  document.getElementById('tabClients').classList.toggle('active',  tab === 'clients');
+  document.getElementById('tabOutreach').classList.toggle('active', tab === 'outreach');
+
+  // clients tab elements
+  const clientEls = [
+    document.querySelector('.crm-toolbar'),
+    document.getElementById('composePanel'),
+    document.querySelector('.table-wrap'),
+  ];
+  clientEls.forEach(el => { if (el) el.style.display = tab === 'clients' ? '' : 'none'; });
+  document.getElementById('outreachTab').style.display = tab === 'outreach' ? 'block' : 'none';
+
+  if (tab === 'outreach') renderOutreachList();
+}
+
+// ─── Email Outreach Tab ───────────────────────────────
+let outreachSelected = new Set();
+
+function renderOutreachList() {
+  const search = (document.getElementById('outreachSearch').value || '').toLowerCase();
+  const list   = document.getElementById('outreachContactList');
+
+  const contacts = clients.filter(c => {
+    const name = `${c.first_name} ${c.last_name}`.toLowerCase();
+    return !search || name.includes(search) || (c.email || '').toLowerCase().includes(search);
+  });
+
+  if (contacts.length === 0) {
+    list.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-muted)">No contacts found.</div>`;
+    return;
+  }
+
+  list.innerHTML = contacts.map(c => `
+    <div class="outreach-contact-item ${outreachSelected.has(c.id) ? 'selected' : ''}"
+         data-id="${c.id}">
+      <input type="checkbox" class="outreach-check" data-id="${c.id}"
+             ${outreachSelected.has(c.id) ? 'checked' : ''}
+             ${!c.email ? 'disabled' : ''} />
+      <div class="outreach-contact-info">
+        <div class="outreach-contact-name">${escHtml(c.first_name || '')} ${escHtml(c.last_name || '')}</div>
+        ${c.email
+          ? `<div class="outreach-contact-email">${escHtml(c.email)}</div>`
+          : `<div class="outreach-no-email">No email on file</div>`}
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.outreach-check').forEach(cb => {
+    cb.addEventListener('change', e => {
+      const id = parseInt(e.target.dataset.id);
+      e.target.checked ? outreachSelected.add(id) : outreachSelected.delete(id);
+      e.target.closest('.outreach-contact-item').classList.toggle('selected', e.target.checked);
+      updateOutreachUI();
+    });
+  });
+
+  // Click anywhere on row to toggle
+  list.querySelectorAll('.outreach-contact-item').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.type === 'checkbox') return;
+      const cb = row.querySelector('input[type="checkbox"]');
+      if (cb && !cb.disabled) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }
+    });
+  });
+
+  updateOutreachUI();
+}
+
+function updateOutreachUI() {
+  const count = outreachSelected.size;
+  document.getElementById('outreachSelectedCount').textContent = `${count} selected`;
+
+  const pills = document.getElementById('outreachToPills');
+  if (count === 0) {
+    pills.innerHTML = `<span style="color:var(--text-muted);font-size:0.85rem">Select contacts on the left</span>`;
+    document.getElementById('outreachSendNote').textContent = 'Select contacts on the left then click Send Emails.';
+  } else {
+    const selected = clients.filter(c => outreachSelected.has(c.id) && c.email);
+    pills.innerHTML = selected.map(c =>
+      `<span class="outreach-pill">${escHtml(c.first_name)} ${escHtml(c.last_name)}</span>`
+    ).join('');
+    document.getElementById('outreachSendNote').textContent =
+      `${selected.length} email${selected.length !== 1 ? 's' : ''} will be sent.`;
+  }
+
+  // Sync select-all checkbox
+  const withEmail = clients.filter(c => c.email);
+  document.getElementById('outreachSelectAll').checked =
+    withEmail.length > 0 && withEmail.every(c => outreachSelected.has(c.id));
+}
+
+function bindOutreachTab() {
+  document.getElementById('outreachSearch').addEventListener('input', renderOutreachList);
+
+  document.getElementById('outreachSelectAll').addEventListener('change', e => {
+    clients.filter(c => c.email).forEach(c =>
+      e.target.checked ? outreachSelected.add(c.id) : outreachSelected.delete(c.id)
+    );
+    renderOutreachList();
+  });
+
+  document.getElementById('outreachSendBtn').addEventListener('click', sendOutreachEmails);
+  document.getElementById('outreachCopyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('outreachBody').value)
+      .then(() => showToast('Message copied!', 'success'))
+      .catch(() => showToast('Could not copy — please select manually.', 'error'));
+  });
+}
+
+async function sendOutreachEmails() {
+  const selected = clients.filter(c => outreachSelected.has(c.id) && c.email);
+  if (selected.length === 0) { showToast('No contacts with emails selected.', 'error'); return; }
+
+  if (EJS_SERVICE_ID.startsWith('PASTE') || EJS_OUTREACH_TEMPLATE.startsWith('PASTE')) {
+    showToast('EmailJS keys are not set up yet.', 'error');
+    return;
+  }
+
+  const subject = document.getElementById('outreachSubject').value.trim();
+  const body    = document.getElementById('outreachBody').value.trim();
+  const btn     = document.getElementById('outreachSendBtn');
+
+  btn.textContent = `Sending 0 / ${selected.length}...`;
+  btn.disabled = true;
+
+  let sent = 0, failed = 0;
+
+  try {
+    for (const client of selected) {
+      const personalizedBody = body.replace(/\[First Name\]/gi, client.first_name || 'there');
+      try {
+        await sendWithTimeout(EJS_SERVICE_ID, EJS_OUTREACH_TEMPLATE, {
+          to_email: client.email,
+          to_name:  `${client.first_name || ''} ${client.last_name || ''}`.trim(),
+          subject,
+          message:  personalizedBody,
+        });
+        sent++;
+      } catch (err) {
+        console.warn(`Failed to send to ${client.email}:`, err);
+        failed++;
+      }
+      btn.textContent = `Sending ${sent + failed} / ${selected.length}...`;
+    }
+
+    // Update statuses
+    const toUpdate = selected.slice(0, sent).filter(c => c.status === 'New Lead').map(c => c.id);
+    if (toUpdate.length > 0) {
+      await updateStatusBatch(toUpdate, 'Contacted');
+      toUpdate.forEach(id => {
+        const idx = clients.findIndex(c => c.id === id);
+        if (idx !== -1) clients[idx].status = 'Contacted';
+      });
+    }
+
+    if (failed === 0) showToast(`${sent} email${sent !== 1 ? 's' : ''} sent!`, 'success');
+    else showToast(`${sent} sent, ${failed} failed.`, 'error');
+
+    outreachSelected.clear();
+    renderOutreachList();
+  } finally {
+    btn.textContent = 'Send Emails';
+    btn.disabled = false;
+  }
 }
 
 // ─── Toast ────────────────────────────────────────────

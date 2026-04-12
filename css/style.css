@@ -792,6 +792,99 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .toast.error { background: #dc2626; }
 .toast.info { background: var(--accent); }
 
+/* ===== PORTAL TABS ===== */
+.portal-tabs-bar { background: #fff; border-bottom: 2px solid var(--border); }
+.portal-tabs { display: flex; gap: 0; }
+.portal-tab {
+  padding: 1rem 1.75rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.portal-tab:hover { color: var(--navy); }
+.portal-tab.active { color: var(--navy); border-bottom-color: var(--gold); }
+
+/* ===== EMAIL OUTREACH TAB ===== */
+.outreach-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem 0 4rem;
+  align-items: start;
+}
+.outreach-contacts {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.outreach-contacts-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-light);
+}
+.outreach-contacts-header h3 { font-size: 1rem; color: var(--navy); margin-bottom: 0.75rem; }
+.outreach-search-wrap { position: relative; margin-bottom: 0.75rem; }
+.outreach-search-wrap .search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); font-size: 0.85rem; }
+.outreach-search-wrap .crm-search { padding-left: 2.2rem; width: 100%; }
+.outreach-select-bar { display: flex; align-items: center; justify-content: space-between; }
+.outreach-selected-count { font-size: 0.78rem; font-weight: 600; color: var(--gold); }
+.outreach-contact-list { max-height: 520px; overflow-y: auto; }
+.outreach-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.outreach-contact-item:last-child { border-bottom: none; }
+.outreach-contact-item:hover { background: var(--bg-light); }
+.outreach-contact-item.selected { background: #fffbeb; }
+.outreach-contact-item input[type="checkbox"] { flex-shrink: 0; width: 15px; height: 15px; accent-color: var(--navy); cursor: pointer; }
+.outreach-contact-info { flex: 1; min-width: 0; }
+.outreach-contact-name { font-size: 0.88rem; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outreach-contact-email { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outreach-no-email { font-size: 0.75rem; color: #d1d5db; font-style: italic; }
+.outreach-compose {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+}
+.outreach-compose h3 { font-size: 1rem; color: var(--navy); margin-bottom: 1.25rem; }
+.outreach-to-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: var(--bg-light);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+  min-height: 44px;
+}
+.outreach-to-label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; margin-top: 2px; }
+.outreach-to-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; flex: 1; }
+.outreach-pill {
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+}
+.outreach-actions { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .about-grid { grid-template-columns: 1fr; }

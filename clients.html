@@ -133,6 +133,16 @@
     </div>
   </div>
 
+  <!-- TAB BAR -->
+  <div class="portal-tabs-bar">
+    <div class="container">
+      <div class="portal-tabs">
+        <button class="portal-tab active" id="tabClients" onclick="switchPortalTab('clients')">&#128101; Clients</button>
+        <button class="portal-tab" id="tabOutreach" onclick="switchPortalTab('outreach')">&#9993; Email Outreach</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MAIN CRM CONTENT -->
   <div class="crm-main">
     <div class="container">
@@ -241,6 +251,71 @@ Financial Representative | Northwestern Mutual</textarea>
       </div>
 
     </div>
+
+    <!-- ===================== EMAIL OUTREACH TAB ===================== -->
+    <div id="outreachTab" style="display:none;">
+
+      <div class="outreach-layout">
+
+        <!-- LEFT: Contact List -->
+        <div class="outreach-contacts">
+          <div class="outreach-contacts-header">
+            <h3>Contacts</h3>
+            <div class="outreach-search-wrap">
+              <span class="search-icon">&#128269;</span>
+              <input type="text" id="outreachSearch" class="crm-search" placeholder="Search contacts..." />
+            </div>
+            <div class="outreach-select-bar">
+              <label style="font-size:0.83rem;color:var(--text-muted);cursor:pointer;">
+                <input type="checkbox" id="outreachSelectAll" /> Select all with email
+              </label>
+              <span class="outreach-selected-count" id="outreachSelectedCount">0 selected</span>
+            </div>
+          </div>
+          <div class="outreach-contact-list" id="outreachContactList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- RIGHT: Compose -->
+        <div class="outreach-compose">
+          <h3>Compose Email</h3>
+          <div class="outreach-to-wrap">
+            <span class="outreach-to-label">To:</span>
+            <div class="outreach-to-pills" id="outreachToPills">
+              <span style="color:var(--text-muted);font-size:0.85rem">Select contacts on the left</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" id="outreachSubject" class="form-input" value="Let's Connect — A Conversation About Your Financial Future" />
+          </div>
+          <div class="form-group">
+            <label>Message <span style="color:var(--text-muted);font-size:0.8rem">(use [First Name] to personalize)</span></label>
+            <textarea id="outreachBody" class="form-input" rows="12">Hi [First Name],
+
+I hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Northwestern Mutual.
+
+I'm reaching out because I'd love to have a quick 20-minute conversation about your financial goals — whether that's building wealth, protecting your family, or planning for retirement.
+
+Would you be open to a free, no-obligation consultation this week?
+
+Looking forward to connecting,
+
+Brady Wells
+Financial Representative | Northwestern Mutual</textarea>
+          </div>
+          <div class="outreach-actions">
+            <button class="btn-primary" id="outreachSendBtn">Send Emails</button>
+            <button class="btn-outline" id="outreachCopyBtn">Copy Message</button>
+          </div>
+          <p class="compose-note" id="outreachSendNote">Select contacts on the left then click Send Emails.</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
   </div>
 
   <!-- ===================== ADD CLIENT MODAL ===================== -->
