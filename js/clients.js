@@ -250,7 +250,7 @@ function marketBadge(market) {
   const m = market.toLowerCase();
   let cls = '';
   let label = market;
-  if (m.includes('young')) { cls = 'market-young'; label = 'Young Personal'; }
+  if (m.includes('young')) { cls = 'market-young'; label = 'Young Professional'; }
   else if (m.includes('established')) { cls = 'market-established'; label = 'Established'; }
   else if (m.includes('retirement')) { cls = 'market-retirement'; label = 'Retirement'; }
   else if (m.includes('business')) { cls = 'market-business'; label = 'Business Owner'; }
