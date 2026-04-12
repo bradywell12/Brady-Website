@@ -70,13 +70,16 @@ async function deleteClientDB(id) {
 async function bulkInsertClients(rows) {
   const { data: { user } } = await db.auth.getUser();
   const rowsWithUser = rows.map(r => ({ ...r, user_id: user.id }));
-  const { data, error } = await db
-    .from('clients')
-    .insert(rowsWithUser)
-    .select();
 
-  if (error) { showToast('Import error: ' + error.message, 'error'); return []; }
-  return data || [];
+  const BATCH = 50;
+  const inserted = [];
+  for (let i = 0; i < rowsWithUser.length; i += BATCH) {
+    const chunk = rowsWithUser.slice(i, i + BATCH);
+    const { data, error } = await db.from('clients').insert(chunk).select();
+    if (error) { showToast('Import error: ' + error.message, 'error'); return inserted; }
+    if (data) inserted.push(...data);
+  }
+  return inserted;
 }
 
 async function updateStatusBatch(ids, status) {
