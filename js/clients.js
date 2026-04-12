@@ -158,7 +158,7 @@ function renderTable() {
           ? `<span style="color:#16a34a;font-weight:600">&#10003; ${new Date(c.last_called).toLocaleDateString()}</span>`
           : '<span style="color:#9ca3af">Not called</span>'}
       </td>
-      <td>${sourceBadge(c.source)}</td>
+      <td class="col-source">${sourceBadge(c.source)}</td>
       <td>
         <div class="row-actions">
           ${c.phone

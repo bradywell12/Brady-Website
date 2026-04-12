@@ -560,6 +560,9 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 }
 .clients-table th:last-child,
 .clients-table td:last-child { min-width: 120px; }
+/* Hide less important columns on smaller screens to make room for actions */
+.col-source { display: none; }
+.col-date { display: none; }
 .clients-table tbody tr:hover { background: var(--bg-light); }
 .clients-table tbody tr:last-child td { border-bottom: none; }
 .clients-table input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--navy); }
