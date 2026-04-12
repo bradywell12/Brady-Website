@@ -610,16 +610,19 @@ Financial Representative | Northwestern Mutual</textarea>
     });
 
     // Listen for auth state changes (handles login/logout automatically)
+    let clientsLoaded = false;
     db.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         showPortal(session.user);
-        if (event === 'SIGNED_IN') {
+        if (!clientsLoaded) {
+          clientsLoaded = true;
           showTableLoading(true);
           await loadClients();
           showTableLoading(false);
           applyFiltersAndRender();
         }
       } else {
+        clientsLoaded = false;
         showLogin();
       }
     });
