@@ -11,6 +11,10 @@ let sortCol = 'created_at';
 let sortDir = 'desc';
 let pendingImport = [];
 
+// LinkedIn state
+let linkedinContacts = [];
+let pendingLinkedIn = [];
+
 // ─── Init ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   showTableLoading(true);
@@ -18,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   showTableLoading(false);
   applyFiltersAndRender();
   bindEvents();
+  bindLinkedInTab();
 });
 
 // ─── Supabase CRUD ────────────────────────────────────
@@ -974,17 +979,19 @@ function exportCSV() {
 function switchPortalTab(tab) {
   document.getElementById('tabClients').classList.toggle('active',  tab === 'clients');
   document.getElementById('tabOutreach').classList.toggle('active', tab === 'outreach');
+  document.getElementById('tabLinkedin').classList.toggle('active', tab === 'linkedin');
 
-  // clients tab elements
   const clientEls = [
     document.querySelector('.crm-toolbar'),
     document.getElementById('composePanel'),
     document.querySelector('.table-wrap'),
   ];
   clientEls.forEach(el => { if (el) el.style.display = tab === 'clients' ? '' : 'none'; });
-  document.getElementById('outreachTab').style.display = tab === 'outreach' ? 'block' : 'none';
+  document.getElementById('outreachTab').style.display  = tab === 'outreach' ? 'block' : 'none';
+  document.getElementById('linkedinTab').style.display  = tab === 'linkedin' ? 'block' : 'none';
 
   if (tab === 'outreach') renderOutreachList();
+  if (tab === 'linkedin' && linkedinContacts.length === 0) loadLinkedIn().then(renderLinkedInTable);
 }
 
 // ─── Email Outreach Tab ───────────────────────────────
@@ -1255,4 +1262,160 @@ function escHtml(str) {
   return str.toString()
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ─── LinkedIn Tab ─────────────────────────────────────
+async function loadLinkedIn() {
+  const { data, error } = await db
+    .from('linkedin_contacts')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (!error) linkedinContacts = data || [];
+}
+
+function renderLinkedInTable() {
+  const tbody = document.getElementById('linkedinTableBody');
+  const empty = document.getElementById('linkedinEmpty');
+  const table = document.getElementById('linkedinTable');
+
+  if (linkedinContacts.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+
+  table.style.display = 'table';
+  empty.style.display = 'none';
+
+  tbody.innerHTML = linkedinContacts.map(c => `
+    <tr>
+      <td>${escHtml(c.first_name || '')}</td>
+      <td>${escHtml(c.last_name  || '')}</td>
+      <td>${c.email
+        ? `<a href="mailto:${escHtml(c.email)}" style="color:var(--accent)">${escHtml(c.email)}</a>`
+        : '<span style="color:#9ca3af">—</span>'}</td>
+      <td>${c.linkedin_url
+        ? `<a href="${escHtml(c.linkedin_url)}" target="_blank" style="color:#0077b5;font-size:0.85rem">View Profile</a>`
+        : '<span style="color:#9ca3af">—</span>'}</td>
+      <td>
+        <button class="action-btn delete" title="Delete" data-lid="${c.id}">&#128465;</button>
+      </td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('.action-btn.delete').forEach(btn =>
+    btn.addEventListener('click', async () => {
+      const id = parseInt(btn.dataset.lid);
+      const { error } = await db.from('linkedin_contacts').delete().eq('id', id);
+      if (!error) {
+        linkedinContacts = linkedinContacts.filter(x => x.id !== id);
+        renderLinkedInTable();
+      }
+    }));
+}
+
+function parseLinkedInCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const rows = parseCSVText(e.target.result);
+    // LinkedIn CSV has a 3-line header notice — skip until we find the real header
+    let headerIdx = 0;
+    for (let i = 0; i < Math.min(rows.length, 5); i++) {
+      if (rows[i].some(h => /first.?name/i.test(h))) { headerIdx = i; break; }
+    }
+    const header = rows[headerIdx].map(h => h.trim().toLowerCase().replace(/\s+/g, ' ').replace(/"/g, ''));
+    const dataRows = rows.slice(headerIdx + 1).filter(r => r.some(c => c.trim()));
+
+    const iFirst = findCol(header, ['first name', 'firstname', 'first']);
+    const iLast  = findCol(header, ['last name', 'lastname', 'last']);
+    const iEmail = findCol(header, ['email address', 'email', 'e-mail']);
+    const iUrl   = findCol(header, ['url', 'linkedin url', 'profile url', 'connected on']);
+
+    pendingLinkedIn = dataRows.map(r => ({
+      first_name:   getCol(r, iFirst),
+      last_name:    getCol(r, iLast),
+      email:        getCol(r, iEmail).toLowerCase() || null,
+      linkedin_url: getCol(r, iUrl) || null,
+    })).filter(c => c.first_name || c.last_name);
+
+    if (pendingLinkedIn.length === 0) {
+      showToast('No connections found in file.', 'error');
+      return;
+    }
+
+    document.getElementById('linkedinPreviewCount').textContent = pendingLinkedIn.length;
+    document.getElementById('linkedinDropZone').style.display = 'none';
+    document.getElementById('linkedinImportPreview').style.display = 'block';
+    document.getElementById('linkedinPreviewBody').innerHTML = pendingLinkedIn.slice(0, 100).map(c => `
+      <tr>
+        <td>${escHtml(c.first_name)}</td>
+        <td>${escHtml(c.last_name)}</td>
+        <td>${escHtml(c.email || '')||'<span style="color:#9ca3af">—</span>'}</td>
+        <td>${c.linkedin_url
+          ? `<a href="${escHtml(c.linkedin_url)}" target="_blank" style="color:#0077b5">View</a>`
+          : '<span style="color:#9ca3af">—</span>'}</td>
+      </tr>`).join('');
+  };
+  reader.readAsText(file);
+}
+
+async function confirmLinkedInImport() {
+  if (pendingLinkedIn.length === 0) return;
+  const btn = document.getElementById('confirmLinkedInImport');
+  btn.textContent = 'Importing...';
+  btn.disabled = true;
+
+  const { data: { user } } = await db.auth.getUser();
+  const existing = new Set(linkedinContacts.map(c => `${c.first_name}|${c.last_name}`));
+  const newRows = pendingLinkedIn
+    .filter(c => !existing.has(`${c.first_name}|${c.last_name}`))
+    .map(c => ({ ...c, user_id: user.id }));
+
+  const BATCH = 50;
+  let inserted = [];
+  for (let i = 0; i < newRows.length; i += BATCH) {
+    const { data, error } = await db.from('linkedin_contacts').insert(newRows.slice(i, i + BATCH)).select();
+    if (error) { showToast('Import error: ' + error.message, 'error'); break; }
+    if (data) inserted.push(...data);
+  }
+
+  linkedinContacts = [...inserted, ...linkedinContacts];
+  renderLinkedInTable();
+  document.getElementById('linkedinImportModal').style.display = 'none';
+  showToast(`${inserted.length} LinkedIn connection${inserted.length !== 1 ? 's' : ''} imported!`, 'success');
+  btn.textContent = 'Import All';
+  btn.disabled = false;
+  pendingLinkedIn = [];
+}
+
+function openLinkedInImportModal() {
+  pendingLinkedIn = [];
+  document.getElementById('linkedinDropZone').style.display = 'block';
+  document.getElementById('linkedinImportPreview').style.display = 'none';
+  document.getElementById('linkedinImportModal').style.display = 'flex';
+}
+
+// Bind LinkedIn tab events (called once on DOMContentLoaded)
+function bindLinkedInTab() {
+  document.getElementById('importLinkedInBtn').addEventListener('click', openLinkedInImportModal);
+  document.getElementById('linkedinEmptyImportBtn')?.addEventListener('click', openLinkedInImportModal);
+  document.getElementById('closeLinkedInImportModal').addEventListener('click', () => {
+    document.getElementById('linkedinImportModal').style.display = 'none';
+  });
+  document.getElementById('cancelLinkedInImport').addEventListener('click', () => {
+    document.getElementById('linkedinImportModal').style.display = 'none';
+  });
+  document.getElementById('confirmLinkedInImport').addEventListener('click', confirmLinkedInImport);
+
+  const fileInput = document.getElementById('linkedinFileInput');
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) parseLinkedInCSVFile(e.target.files[0]); });
+
+  const drop = document.getElementById('linkedinDropZone');
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) parseLinkedInCSVFile(file);
+  });
 }
