@@ -1292,6 +1292,8 @@ function escHtml(str) {
 // ─── Add LinkedIn Connection ──────────────────────────
 function openAddLinkedInModal() {
   document.getElementById('linkedinAddForm').reset();
+  delete document.getElementById('linkedinAddForm').dataset.editId;
+  document.getElementById('addLinkedInModal').querySelector('h2').textContent = 'Add LinkedIn Connection';
   document.getElementById('addLinkedInModal').style.display = 'flex';
 }
 
@@ -1300,25 +1302,43 @@ async function saveLinkedInContact(e) {
   const btn = e.target.querySelector('button[type="submit"]');
   btn.textContent = 'Saving...'; btn.disabled = true;
 
-  const { data: { user } } = await db.auth.getUser();
-  const row = {
-    user_id:      user.id,
+  const form   = document.getElementById('linkedinAddForm');
+  const editId = form.dataset.editId ? parseInt(form.dataset.editId) : null;
+  const fields = {
     first_name:   document.getElementById('liFirstName').value.trim(),
     last_name:    document.getElementById('liLastName').value.trim(),
     email:        document.getElementById('liEmail').value.trim().toLowerCase() || null,
     linkedin_url: document.getElementById('liUrl').value.trim() || null,
   };
 
-  const { data, error } = await db.from('linkedin_contacts').insert([row]).select().single();
-  if (error) {
-    showToast('Error saving: ' + error.message, 'error');
+  if (editId) {
+    const { error } = await db.from('linkedin_contacts').update(fields).eq('id', editId);
+    if (error) {
+      showToast('Error updating: ' + error.message, 'error');
+    } else {
+      const c = linkedinContacts.find(x => x.id === editId);
+      if (c) Object.assign(c, fields);
+      renderLinkedInTable();
+      renderStats('linkedin');
+      document.getElementById('addLinkedInModal').style.display = 'none';
+      showToast('Connection updated!', 'success');
+    }
   } else {
-    linkedinContacts.unshift(data);
-    renderLinkedInTable();
-    renderStats('linkedin');
-    document.getElementById('addLinkedInModal').style.display = 'none';
-    showToast('Connection added!', 'success');
+    const { data: { user } } = await db.auth.getUser();
+    const { data, error } = await db.from('linkedin_contacts').insert([{ ...fields, user_id: user.id }]).select().single();
+    if (error) {
+      showToast('Error saving: ' + error.message, 'error');
+    } else {
+      linkedinContacts.unshift(data);
+      renderLinkedInTable();
+      renderStats('linkedin');
+      document.getElementById('addLinkedInModal').style.display = 'none';
+      showToast('Connection added!', 'success');
+    }
   }
+
+  delete form.dataset.editId;
+  document.getElementById('addLinkedInModal').querySelector('h2').textContent = 'Add LinkedIn Connection';
   btn.textContent = 'Save Connection'; btn.disabled = false;
 }
 
@@ -1401,9 +1421,24 @@ function renderLinkedInTable() {
           : '<span style="color:#9ca3af;font-size:0.82rem">No URL</span>'}
       </td>
       <td>
+        <button class="action-btn edit" title="Edit" data-lid="${c.id}">&#9998;</button>
         <button class="action-btn delete" title="Delete" data-lid="${c.id}">&#128465;</button>
       </td>
     </tr>`).join('');
+
+  tbody.querySelectorAll('.action-btn.edit').forEach(btn =>
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.lid);
+      const c = linkedinContacts.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('liFirstName').value = c.first_name || '';
+      document.getElementById('liLastName').value  = c.last_name  || '';
+      document.getElementById('liEmail').value     = c.email      || '';
+      document.getElementById('liUrl').value       = c.linkedin_url || '';
+      document.getElementById('addLinkedInModal').querySelector('h2').textContent = 'Edit Connection';
+      document.getElementById('linkedinAddForm').dataset.editId = id;
+      document.getElementById('addLinkedInModal').style.display = 'flex';
+    }));
 
   tbody.querySelectorAll('.action-btn.delete').forEach(btn =>
     btn.addEventListener('click', async () => {
@@ -1412,6 +1447,7 @@ function renderLinkedInTable() {
       if (!error) {
         linkedinContacts = linkedinContacts.filter(x => x.id !== id);
         renderLinkedInTable();
+        renderStats('linkedin');
       }
     }));
 }
