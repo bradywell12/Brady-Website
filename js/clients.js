@@ -7,8 +7,8 @@
 let clients = [];
 let filteredClients = [];
 let selectedIds = new Set();
-let sortCol = 'created_at';
-let sortDir = 'desc';
+let sortCol = 'first_name';
+let sortDir = 'asc';
 let pendingImport = [];
 
 // LinkedIn state
