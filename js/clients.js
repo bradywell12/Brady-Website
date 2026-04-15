@@ -1007,7 +1007,6 @@ function switchPortalTab(tab) {
   document.getElementById('outreachTab').style.display = tab === 'linkedin' ? 'block' : 'none';
 
   if (tab === 'linkedin') {
-    renderOutreachList();
     if (linkedinContacts.length === 0) {
       loadLinkedIn().then(() => { renderLinkedInTable(); renderStats('linkedin'); });
     } else {
@@ -1340,14 +1339,13 @@ function escHtml(str) {
 function toggleComposePanel() {
   const panel = document.getElementById('outreachCompose');
   const btn   = document.getElementById('composeEmailBtn');
-  const open  = panel.style.display !== 'none';
-  if (open) {
+  if (panel.style.display === 'flex') {
     panel.style.display = 'none';
-    btn.textContent = '\u2709 Compose Email';
+    if (btn) btn.textContent = '\u2709 Compose Email';
   } else {
     renderOutreachList();
     panel.style.display = 'flex';
-    btn.textContent = '\u2715 Close Compose';
+    if (btn) btn.textContent = '\u2715 Close Compose';
   }
 }
 
