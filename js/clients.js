@@ -100,8 +100,6 @@ async function updateStatusBatch(ids, status) {
 function applyFiltersAndRender() {
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
   const statusF = document.getElementById('statusFilter').value;
-  const sourceF = document.getElementById('sourceFilter').value;
-
   const callF   = document.getElementById('callFilter').value;
   const marketF = document.getElementById('marketFilter').value;
 
@@ -114,12 +112,11 @@ function applyFiltersAndRender() {
       (c.phone        || '').toLowerCase().includes(search) ||
       (c.market_type  || '').toLowerCase().includes(search);
     const matchStatus = !statusF || c.status === statusF;
-    const matchSource = !sourceF || c.source === sourceF;
     const matchCall   = !callF ||
       (callF === 'not_called' && !c.last_called) ||
       (callF === 'called'     &&  c.last_called);
     const matchMarket = !marketF || c.market_type === marketF;
-    return matchSearch && matchStatus && matchSource && matchCall && matchMarket;
+    return matchSearch && matchStatus && matchCall && matchMarket;
   });
 
   // Sort
@@ -318,7 +315,6 @@ function sourceBadge(source) {
 function bindEvents() {
   document.getElementById('searchInput').addEventListener('input', applyFiltersAndRender);
   document.getElementById('statusFilter').addEventListener('change', applyFiltersAndRender);
-  document.getElementById('sourceFilter').addEventListener('change', applyFiltersAndRender);
   document.getElementById('callFilter').addEventListener('change', applyFiltersAndRender);
   document.getElementById('marketFilter').addEventListener('change', applyFiltersAndRender);
 
