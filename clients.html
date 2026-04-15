@@ -140,8 +140,7 @@
     <div class="container">
       <div class="portal-tabs">
         <button class="portal-tab active" id="tabClients" onclick="switchPortalTab('clients')">&#128101; Clients</button>
-        <button class="portal-tab" id="tabOutreach" onclick="switchPortalTab('outreach')">&#9993; Email Outreach</button>
-        <button class="portal-tab" id="tabLinkedin" onclick="switchPortalTab('linkedin')">&#128101; LinkedIn</button>
+        <button class="portal-tab" id="tabLinkedin" onclick="switchPortalTab('linkedin')">&#128279; LinkedIn</button>
       </div>
     </div>
   </div>
@@ -262,47 +261,70 @@ Financial Representative | Northwestern Mutual</textarea>
 
     </div>
 
-    <!-- ===================== EMAIL OUTREACH TAB ===================== -->
+    <!-- ===================== LINKEDIN TAB ===================== -->
     <div id="outreachTab" style="display:none;">
+      <div class="container">
 
-      <div class="outreach-layout">
-
-        <!-- LEFT: Contact List -->
-        <div class="outreach-contacts">
-          <div class="outreach-contacts-header">
-            <h3>Contacts</h3>
-            <div class="outreach-search-wrap">
-              <span class="search-icon">&#128269;</span>
-              <input type="text" id="outreachSearch" class="crm-search" placeholder="Search contacts..." />
-            </div>
-            <div class="outreach-select-bar">
-              <label style="font-size:0.83rem;color:var(--text-muted);cursor:pointer;">
-                <input type="checkbox" id="outreachSelectAll" /> Select all with email
-              </label>
-              <span class="outreach-selected-count" id="outreachSelectedCount">0 selected</span>
-            </div>
-          </div>
-          <div class="outreach-contact-list" id="outreachContactList">
-            <!-- Populated by JS -->
+        <!-- LinkedIn Connections Table -->
+        <div class="crm-header-actions" style="margin:1.5rem 0 1rem;">
+          <h3 style="color:var(--text);font-size:1.1rem;font-weight:600;">LinkedIn Connections</h3>
+          <button class="btn-gold" id="importLinkedInBtn">Import LinkedIn CSV</button>
+        </div>
+        <div class="table-wrap" style="margin-bottom:2rem;">
+          <table class="clients-table" id="linkedinTable" style="display:none;">
+            <thead>
+              <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>LinkedIn URL</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="linkedinTableBody"></tbody>
+          </table>
+          <div class="table-empty" id="linkedinEmpty" style="display:none;">
+            <div class="empty-icon">&#128279;</div>
+            <h3>No LinkedIn connections yet</h3>
+            <p>Import your LinkedIn Connections.csv file to get started.</p>
+            <button class="btn-primary" id="linkedinEmptyImportBtn">Import LinkedIn CSV</button>
           </div>
         </div>
 
-        <!-- RIGHT: Compose -->
-        <div class="outreach-compose">
-          <h3>Compose Email</h3>
-          <div class="outreach-to-wrap">
-            <span class="outreach-to-label">To:</span>
-            <div class="outreach-to-pills" id="outreachToPills">
-              <span style="color:var(--text-muted);font-size:0.85rem">Select contacts on the left</span>
+        <!-- Email Compose -->
+        <div class="outreach-layout">
+          <div class="outreach-contacts">
+            <div class="outreach-contacts-header">
+              <h3>Contacts</h3>
+              <div class="outreach-search-wrap">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" id="outreachSearch" class="crm-search" placeholder="Search contacts..." />
+              </div>
+              <div class="outreach-select-bar">
+                <label style="font-size:0.83rem;color:var(--text-muted);cursor:pointer;">
+                  <input type="checkbox" id="outreachSelectAll" /> Select all with email
+                </label>
+                <span class="outreach-selected-count" id="outreachSelectedCount">0 selected</span>
+              </div>
             </div>
+            <div class="outreach-contact-list" id="outreachContactList"></div>
           </div>
-          <div class="form-group">
-            <label>Subject</label>
-            <input type="text" id="outreachSubject" class="form-input" value="Let's Connect — A Conversation About Your Financial Future" />
-          </div>
-          <div class="form-group">
-            <label>Message <span style="color:var(--text-muted);font-size:0.8rem">(use [First Name] to personalize)</span></label>
-            <textarea id="outreachBody" class="form-input" rows="12">Hi [First Name],
+
+          <div class="outreach-compose">
+            <h3>Compose Email</h3>
+            <div class="outreach-to-wrap">
+              <span class="outreach-to-label">To:</span>
+              <div class="outreach-to-pills" id="outreachToPills">
+                <span style="color:var(--text-muted);font-size:0.85rem">Select contacts on the left</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Subject</label>
+              <input type="text" id="outreachSubject" class="form-input" value="Let's Connect — A Conversation About Your Financial Future" />
+            </div>
+            <div class="form-group">
+              <label>Message <span style="color:var(--text-muted);font-size:0.8rem">(use [First Name] to personalize)</span></label>
+              <textarea id="outreachBody" class="form-input" rows="12">Hi [First Name],
 
 I hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Northwestern Mutual.
 
@@ -314,46 +336,15 @@ Looking forward to connecting,
 
 Brady Wells
 Financial Representative | Northwestern Mutual</textarea>
+            </div>
+            <div class="outreach-actions">
+              <button class="btn-primary" id="outreachSendBtn">Send Emails</button>
+              <button class="btn-outline" id="outreachCopyBtn">Copy Message</button>
+            </div>
+            <p class="compose-note" id="outreachSendNote">Select contacts on the left then click Send Emails.</p>
           </div>
-          <div class="outreach-actions">
-            <button class="btn-primary" id="outreachSendBtn">Send Emails</button>
-            <button class="btn-outline" id="outreachCopyBtn">Copy Message</button>
-          </div>
-          <p class="compose-note" id="outreachSendNote">Select contacts on the left then click Send Emails.</p>
         </div>
 
-      </div>
-    </div>
-
-    <!-- ===================== LINKEDIN TAB ===================== -->
-    <div id="linkedinTab" style="display:none;">
-      <div class="container">
-        <div class="crm-header-actions" style="margin:1.5rem 0 1rem;">
-          <h3 style="color:var(--text);font-size:1.1rem;font-weight:600;">LinkedIn Connections</h3>
-          <div style="display:flex;gap:0.75rem;">
-            <button class="btn-gold" id="importLinkedInBtn">Import LinkedIn CSV</button>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table class="clients-table" id="linkedinTable" style="display:none;">
-            <thead>
-              <tr>
-                <th class="sortable">First Name</th>
-                <th class="sortable">Last Name</th>
-                <th>Email</th>
-                <th>LinkedIn URL</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="linkedinTableBody"></tbody>
-          </table>
-          <div class="table-empty" id="linkedinEmpty" style="display:none;">
-            <div class="empty-icon">&#128101;</div>
-            <h3>No LinkedIn connections yet</h3>
-            <p>Import your LinkedIn Connections.csv file to get started.</p>
-            <button class="btn-primary" id="linkedinEmptyImportBtn">Import LinkedIn CSV</button>
-          </div>
-        </div>
       </div>
     </div>
 

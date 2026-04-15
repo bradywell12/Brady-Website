@@ -978,7 +978,6 @@ function exportCSV() {
 // ─── Portal Tab Switching ─────────────────────────────
 function switchPortalTab(tab) {
   document.getElementById('tabClients').classList.toggle('active',  tab === 'clients');
-  document.getElementById('tabOutreach').classList.toggle('active', tab === 'outreach');
   document.getElementById('tabLinkedin').classList.toggle('active', tab === 'linkedin');
 
   const clientEls = [
@@ -987,11 +986,12 @@ function switchPortalTab(tab) {
     document.querySelector('.table-wrap'),
   ];
   clientEls.forEach(el => { if (el) el.style.display = tab === 'clients' ? '' : 'none'; });
-  document.getElementById('outreachTab').style.display  = tab === 'outreach' ? 'block' : 'none';
-  document.getElementById('linkedinTab').style.display  = tab === 'linkedin' ? 'block' : 'none';
+  document.getElementById('outreachTab').style.display = tab === 'linkedin' ? 'block' : 'none';
 
-  if (tab === 'outreach') renderOutreachList();
-  if (tab === 'linkedin' && linkedinContacts.length === 0) loadLinkedIn().then(renderLinkedInTable);
+  if (tab === 'linkedin') {
+    renderOutreachList();
+    if (linkedinContacts.length === 0) loadLinkedIn().then(renderLinkedInTable);
+  }
 }
 
 // ─── Email Outreach Tab ───────────────────────────────
