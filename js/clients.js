@@ -1577,16 +1577,41 @@ function renderLinkedInTable() {
   const empty = document.getElementById('linkedinEmpty');
   const table = document.getElementById('linkedinTable');
 
+  const search        = (document.getElementById('liSearch')?.value         || '').toLowerCase();
+  const contactedF    =  document.getElementById('liContactedFilter')?.value || '';
+  const emailF        =  document.getElementById('liEmailFilter')?.value     || '';
+
+  const filtered = linkedinContacts.filter(c => {
+    const name = `${c.first_name || ''} ${c.last_name || ''}`.toLowerCase();
+    const matchSearch    = !search || name.includes(search) || (c.email || '').toLowerCase().includes(search);
+    const matchContacted = !contactedF
+      || (contactedF === 'contacted'     &&  c.contacted_at)
+      || (contactedF === 'not_contacted' && !c.contacted_at);
+    const matchEmail     = !emailF
+      || (emailF === 'has_email' &&  c.email)
+      || (emailF === 'no_email'  && !c.email);
+    return matchSearch && matchContacted && matchEmail;
+  });
+
   if (linkedinContacts.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'block';
     return;
   }
 
+  table.style.display = filtered.length ? 'table' : 'none';
+  empty.style.display = filtered.length ? 'none' : 'block';
+  if (!filtered.length) {
+    empty.querySelector('h3').textContent = 'No connections match your filters';
+    empty.querySelector('p').textContent  = 'Try adjusting the search or filter options above.';
+    empty.querySelector('button')?.remove();
+    return;
+  }
+
   table.style.display = 'table';
   empty.style.display = 'none';
 
-  tbody.innerHTML = linkedinContacts.map(c => `
+  tbody.innerHTML = filtered.map(c => `
     <tr>
       <td>${escHtml(c.first_name || '')}</td>
       <td>${escHtml(c.last_name  || '')}</td>
@@ -1717,6 +1742,11 @@ function openLinkedInImportModal() {
 
 // Bind LinkedIn tab events (called once on DOMContentLoaded)
 function bindLinkedInTab() {
+  // Filters
+  document.getElementById('liSearch').addEventListener('input', renderLinkedInTable);
+  document.getElementById('liContactedFilter').addEventListener('change', renderLinkedInTable);
+  document.getElementById('liEmailFilter').addEventListener('change', renderLinkedInTable);
+
   document.getElementById('importLinkedInBtn').addEventListener('click', openLinkedInImportModal);
   document.getElementById('linkedinEmptyImportBtn')?.addEventListener('click', openLinkedInImportModal);
   document.getElementById('closeLinkedInImportModal').addEventListener('click', () => {

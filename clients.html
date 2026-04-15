@@ -269,6 +269,26 @@ Financial Representative | Northwestern Mutual</textarea>
           <button class="btn-primary" id="importLinkedInBtn" onclick="openLinkedInImportModal()">Import LinkedIn CSV</button>
           <button class="btn-secondary" id="composeEmailBtn" onclick="toggleComposePanel()">&#9993; Compose Email</button>
         </div>
+        <!-- LinkedIn Filters -->
+        <div class="crm-toolbar" id="linkedinToolbar">
+          <div class="crm-search-wrap">
+            <span class="search-icon">&#128269;</span>
+            <input type="text" id="liSearch" class="crm-search" placeholder="Search by name or email..." />
+          </div>
+          <div class="crm-filters">
+            <select id="liContactedFilter" class="crm-select">
+              <option value="">All Connections</option>
+              <option value="not_contacted">Not Contacted</option>
+              <option value="contacted">Contacted</option>
+            </select>
+            <select id="liEmailFilter" class="crm-select">
+              <option value="">All</option>
+              <option value="has_email">Has Email</option>
+              <option value="no_email">No Email</option>
+            </select>
+          </div>
+        </div>
+
         <div class="table-wrap" style="margin-bottom:2rem;">
           <table class="clients-table" id="linkedinTable" style="display:none;">
             <thead>
