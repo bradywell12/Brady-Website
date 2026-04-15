@@ -160,9 +160,6 @@ function renderTable() {
           ? `<a href="tel:${escHtml(c.phone)}" style="color:var(--text)">${escHtml(c.phone)}</a>`
           : '<span style="color:#9ca3af">—</span>'}
       </td>
-      <td>${c.email
-        ? `<a href="mailto:${escHtml(c.email)}" style="color:var(--accent)">${escHtml(c.email)}</a>`
-        : '<span style="color:#9ca3af">—</span>'}</td>
       <td>${statusBadge(c.status)}</td>
       <td>
         <select class="market-inline-select ${c.market_type ? 'has-value' : ''}" data-id="${c.id}">
