@@ -140,6 +140,14 @@ function renderTable() {
   const tbody = document.getElementById('clientsTableBody');
   const empty = document.getElementById('tableEmpty');
 
+  // Update sort arrow indicators
+  document.querySelectorAll('#clientsTable th.sortable').forEach(th => {
+    const col   = th.dataset.col;
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = col === sortCol ? (sortDir === 'asc' ? '▲' : '▼') : '⇅';
+    th.style.color = col === sortCol ? 'var(--gold)' : '';
+  });
+
   if (filteredClients.length === 0) {
     tbody.innerHTML = '';
     document.getElementById('clientsTable').style.display = 'none';
@@ -320,7 +328,7 @@ function bindEvents() {
     applyFiltersAndRender();
   });
 
-  document.querySelectorAll('th.sortable').forEach(th => {
+  document.querySelectorAll('#clientsTable th.sortable').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
       sortDir = (sortCol === col && sortDir === 'asc') ? 'desc' : 'asc';
