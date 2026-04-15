@@ -268,7 +268,7 @@ Financial Representative | Northwestern Mutual</textarea>
         <!-- LinkedIn Connections Table -->
         <div class="crm-header-actions" style="margin:1.5rem 0 1rem;">
           <h3 style="color:var(--text);font-size:1.1rem;font-weight:600;">LinkedIn Connections</h3>
-          <button class="btn-gold" id="importLinkedInBtn">Import LinkedIn CSV</button>
+          <button class="btn-gold" id="importLinkedInBtn" onclick="openLinkedInImportModal()">Import LinkedIn CSV</button>
         </div>
         <div class="table-wrap" style="margin-bottom:2rem;">
           <table class="clients-table" id="linkedinTable" style="display:none;">
@@ -287,7 +287,7 @@ Financial Representative | Northwestern Mutual</textarea>
             <div class="empty-icon">&#128279;</div>
             <h3>No LinkedIn connections yet</h3>
             <p>Import your LinkedIn Connections.csv file to get started.</p>
-            <button class="btn-primary" id="linkedinEmptyImportBtn">Import LinkedIn CSV</button>
+            <button class="btn-primary" id="linkedinEmptyImportBtn" onclick="openLinkedInImportModal()">Import LinkedIn CSV</button>
           </div>
         </div>
 
@@ -356,7 +356,7 @@ Financial Representative | Northwestern Mutual</textarea>
     <div class="modal modal-wide">
       <div class="modal-header">
         <h2>Import LinkedIn Connections</h2>
-        <button class="modal-close" id="closeLinkedInImportModal">&times;</button>
+        <button class="modal-close" id="closeLinkedInImportModal" onclick="document.getElementById('linkedinImportModal').style.display='none'">&times;</button>
       </div>
       <div class="import-instructions">
         <h4>How to export from LinkedIn:</h4>
@@ -390,8 +390,8 @@ Financial Representative | Northwestern Mutual</textarea>
           </table>
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" id="cancelLinkedInImport">Cancel</button>
-          <button type="button" class="btn-primary" id="confirmLinkedInImport">Import All</button>
+          <button type="button" class="btn-secondary" id="cancelLinkedInImport" onclick="document.getElementById('linkedinImportModal').style.display='none'">Cancel</button>
+          <button type="button" class="btn-primary" id="confirmLinkedInImport" onclick="confirmLinkedInImport()">Import All</button>
         </div>
       </div>
     </div>
