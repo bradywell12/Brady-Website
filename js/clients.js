@@ -1323,12 +1323,19 @@ async function copyAndOpenLinkedIn() {
 
 // ─── LinkedIn Tab ─────────────────────────────────────
 async function loadLinkedIn() {
-  const { data, error } = await db
-    .from('linkedin_contacts')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(5000);
-  if (!error) linkedinContacts = data || [];
+  let all = [], from = 0, batchSize = 1000;
+  while (true) {
+    const { data, error } = await db
+      .from('linkedin_contacts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + batchSize - 1);
+    if (error || !data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < batchSize) break;
+    from += batchSize;
+  }
+  linkedinContacts = all;
 }
 
 function renderLinkedInTable() {
