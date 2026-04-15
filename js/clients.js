@@ -1073,7 +1073,7 @@ function switchPortalTab(tab) {
   document.getElementById('tabLinkedin').classList.toggle('active', tab === 'linkedin');
 
   const clientEls = [
-    document.querySelector('.crm-toolbar'),
+    document.getElementById('clientsToolbar'),
     document.querySelector('.table-wrap'),
   ];
   clientEls.forEach(el => { if (el) el.style.display = tab === 'clients' ? '' : 'none'; });
@@ -1599,12 +1599,11 @@ function renderLinkedInTable() {
     return;
   }
 
-  table.style.display = filtered.length ? 'table' : 'none';
-  empty.style.display = filtered.length ? 'none' : 'block';
   if (!filtered.length) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
     empty.querySelector('h3').textContent = 'No connections match your filters';
     empty.querySelector('p').textContent  = 'Try adjusting the search or filter options above.';
-    empty.querySelector('button')?.remove();
     return;
   }
 
