@@ -145,7 +145,6 @@ function renderTable() {
     const col   = th.dataset.col;
     const arrow = th.querySelector('.sort-arrow');
     if (arrow) arrow.textContent = col === sortCol ? (sortDir === 'asc' ? '▲' : '▼') : '⇅';
-    th.style.color = col === sortCol ? 'var(--gold)' : '';
   });
 
   if (filteredClients.length === 0) {
@@ -1618,7 +1617,6 @@ function renderLinkedInTable() {
     const col = th.dataset.col;
     const arrow = th.querySelector('.sort-arrow');
     if (arrow) arrow.textContent = col === liSortCol ? (liSortDir === 'asc' ? '▲' : '▼') : '⇅';
-    th.style.color = col === liSortCol ? 'var(--gold)' : '';
   });
 
   if (linkedinContacts.length === 0) {
