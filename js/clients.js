@@ -1572,6 +1572,9 @@ async function loadLinkedIn() {
   linkedinContacts = all;
 }
 
+let liSortCol = 'first_name';
+let liSortDir = 'asc';
+
 function renderLinkedInTable() {
   const tbody = document.getElementById('linkedinTableBody');
   const empty = document.getElementById('linkedinEmpty');
@@ -1591,6 +1594,23 @@ function renderLinkedInTable() {
       || (emailF === 'has_email' &&  c.email)
       || (emailF === 'no_email'  && !c.email);
     return matchSearch && matchContacted && matchEmail;
+  });
+
+  // Sort
+  filtered.sort((a, b) => {
+    const av = (a[liSortCol] || '').toLowerCase();
+    const bv = (b[liSortCol] || '').toLowerCase();
+    return liSortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  // Update sort arrow indicators
+  ['liSortFirst', 'liSortLast'].forEach(id => {
+    const th = document.getElementById(id);
+    if (!th) return;
+    const col = th.dataset.col;
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = col === liSortCol ? (liSortDir === 'asc' ? '▲' : '▼') : '⇅';
+    th.style.color = col === liSortCol ? 'var(--gold)' : '';
   });
 
   if (linkedinContacts.length === 0) {
@@ -1745,6 +1765,20 @@ function bindLinkedInTab() {
   document.getElementById('liSearch').addEventListener('input', renderLinkedInTable);
   document.getElementById('liContactedFilter').addEventListener('change', renderLinkedInTable);
   document.getElementById('liEmailFilter').addEventListener('change', renderLinkedInTable);
+
+  // Sortable column headers
+  ['liSortFirst', 'liSortLast'].forEach(id => {
+    document.getElementById(id).addEventListener('click', () => {
+      const col = document.getElementById(id).dataset.col;
+      if (liSortCol === col) {
+        liSortDir = liSortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        liSortCol = col;
+        liSortDir = 'asc';
+      }
+      renderLinkedInTable();
+    });
+  });
 
   document.getElementById('importLinkedInBtn').addEventListener('click', openLinkedInImportModal);
   document.getElementById('linkedinEmptyImportBtn')?.addEventListener('click', openLinkedInImportModal);
