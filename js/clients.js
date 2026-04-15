@@ -1289,6 +1289,39 @@ function escHtml(str) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// ─── Add LinkedIn Connection ──────────────────────────
+function openAddLinkedInModal() {
+  document.getElementById('linkedinAddForm').reset();
+  document.getElementById('addLinkedInModal').style.display = 'flex';
+}
+
+async function saveLinkedInContact(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  const { data: { user } } = await db.auth.getUser();
+  const row = {
+    user_id:      user.id,
+    first_name:   document.getElementById('liFirstName').value.trim(),
+    last_name:    document.getElementById('liLastName').value.trim(),
+    email:        document.getElementById('liEmail').value.trim().toLowerCase() || null,
+    linkedin_url: document.getElementById('liUrl').value.trim() || null,
+  };
+
+  const { data, error } = await db.from('linkedin_contacts').insert([row]).select().single();
+  if (error) {
+    showToast('Error saving: ' + error.message, 'error');
+  } else {
+    linkedinContacts.unshift(data);
+    renderLinkedInTable();
+    renderStats('linkedin');
+    document.getElementById('addLinkedInModal').style.display = 'none';
+    showToast('Connection added!', 'success');
+  }
+  btn.textContent = 'Save Connection'; btn.disabled = false;
+}
+
 // ─── LinkedIn Contact ─────────────────────────────────
 let linkedinContactUrl = '';
 let linkedinContactId  = null;

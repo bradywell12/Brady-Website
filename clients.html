@@ -268,6 +268,7 @@ Financial Representative | Northwestern Mutual</textarea>
         <!-- LinkedIn Connections Table -->
         <div class="crm-header-actions" style="margin:1.5rem 0 1rem;">
           <h3 style="color:var(--text);font-size:1.1rem;font-weight:600;">LinkedIn Connections</h3>
+          <button class="btn-gold" onclick="openAddLinkedInModal()">+ Add Connection</button>
           <button class="btn-gold" id="importLinkedInBtn" onclick="openLinkedInImportModal()">Import LinkedIn CSV</button>
         </div>
         <div class="table-wrap" style="margin-bottom:2rem;">
@@ -350,6 +351,40 @@ Financial Representative | Northwestern Mutual</textarea>
     </div>
 
   </div>
+  </div>
+
+  <!-- ===================== ADD LINKEDIN MODAL ===================== -->
+  <div class="modal-overlay" id="addLinkedInModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Add LinkedIn Connection</h2>
+        <button class="modal-close" onclick="document.getElementById('addLinkedInModal').style.display='none'">&times;</button>
+      </div>
+      <form id="linkedinAddForm" onsubmit="saveLinkedInContact(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" id="liFirstName" class="form-input" placeholder="John" required />
+          </div>
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" id="liLastName" class="form-input" placeholder="Smith" required />
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Email Address</label>
+          <input type="email" id="liEmail" class="form-input" placeholder="john@email.com" />
+        </div>
+        <div class="form-group full">
+          <label>LinkedIn URL</label>
+          <input type="url" id="liUrl" class="form-input" placeholder="https://www.linkedin.com/in/johnsmith" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="document.getElementById('addLinkedInModal').style.display='none'">Cancel</button>
+          <button type="submit" class="btn-primary">Save Connection</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- ===================== LINKEDIN CONTACT MODAL ===================== -->
