@@ -1326,7 +1326,8 @@ async function loadLinkedIn() {
   const { data, error } = await db
     .from('linkedin_contacts')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(5000);
   if (!error) linkedinContacts = data || [];
 }
 
