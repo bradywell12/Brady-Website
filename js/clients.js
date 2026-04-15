@@ -372,9 +372,6 @@ function bindEvents() {
   document.getElementById('exportBtn').addEventListener('click', exportCSV);
   document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
 
-  // Fix names button
-  document.getElementById('fixNamesBtn').addEventListener('click', fixParenthesesInNames);
-
   // Remove duplicates button
   document.getElementById('removeDupsBtn').addEventListener('click', removeDuplicates);
 
@@ -1187,57 +1184,89 @@ function showToast(msg, type = '') {
 
 // ─── Remove Duplicates ────────────────────────────────
 async function removeDuplicates() {
-  const seen    = new Map();
-  const toDelete = [];
-
-  // Sort by created_at so we keep the oldest entry
-  const sorted = [...clients].sort((a, b) =>
+  // --- Clients: dedup by name+phone, name+email, or phone+email ---
+  const clientsToDelete = [];
+  const clientSeen = new Map();
+  const clientsSorted = [...clients].sort((a, b) =>
     new Date(a.created_at) - new Date(b.created_at)
   );
-
-  for (const c of sorted) {
+  for (const c of clientsSorted) {
     const phone = (c.phone || '').replace(/\D/g, '');
     const email = (c.email || '').toLowerCase().trim();
     const first = (c.first_name || '').toLowerCase().trim();
     const last  = (c.last_name  || '').toLowerCase().trim();
-
-    // Match on name+phone OR name+email OR phone+email
-    const keyNamePhone = `${first}|${last}|${phone}`;
-    const keyNameEmail = `${first}|${last}|${email}`;
-    const keyPhoneEmail = `${phone}|${email}`;
-
     const isDup =
-      (phone && seen.has(keyNamePhone)) ||
-      (email && seen.has(keyNameEmail)) ||
-      (phone && email && seen.has(keyPhoneEmail));
-
+      (phone && clientSeen.has(`${first}|${last}|${phone}`)) ||
+      (email && clientSeen.has(`${first}|${last}|${email}`)) ||
+      (phone && email && clientSeen.has(`${phone}|${email}`));
     if (isDup) {
-      toDelete.push(c.id);
+      clientsToDelete.push(c.id);
     } else {
-      if (phone) seen.set(keyNamePhone, c.id);
-      if (email) seen.set(keyNameEmail, c.id);
-      if (phone && email) seen.set(keyPhoneEmail, c.id);
+      if (phone) clientSeen.set(`${first}|${last}|${phone}`, c.id);
+      if (email) clientSeen.set(`${first}|${last}|${email}`, c.id);
+      if (phone && email) clientSeen.set(`${phone}|${email}`, c.id);
     }
   }
 
-  if (toDelete.length === 0) {
-    showToast('No duplicates found — all clean!', 'info');
+  // --- LinkedIn: dedup by first+last name OR email ---
+  const linkedinToDelete = [];
+  const liSeen = new Map();
+  const liSorted = [...linkedinContacts].sort((a, b) =>
+    new Date(a.created_at) - new Date(b.created_at)
+  );
+  for (const c of liSorted) {
+    const email = (c.email || '').toLowerCase().trim();
+    const first = (c.first_name || '').toLowerCase().trim();
+    const last  = (c.last_name  || '').toLowerCase().trim();
+    const keyName  = `${first}|${last}`;
+    const keyEmail = `email|${email}`;
+    const isDup =
+      liSeen.has(keyName) ||
+      (email && liSeen.has(keyEmail));
+    if (isDup) {
+      linkedinToDelete.push(c.id);
+    } else {
+      liSeen.set(keyName, c.id);
+      if (email) liSeen.set(keyEmail, c.id);
+    }
+  }
+
+  const totalDups = clientsToDelete.length + linkedinToDelete.length;
+
+  if (totalDups === 0) {
+    showToast('No duplicates found — all clean!', 'success');
     return;
   }
 
-  if (!confirm(`Found ${toDelete.length} duplicate(s). Delete them and keep the originals?`)) return;
+  const parts = [];
+  if (clientsToDelete.length)  parts.push(`${clientsToDelete.length} client duplicate${clientsToDelete.length !== 1 ? 's' : ''}`);
+  if (linkedinToDelete.length) parts.push(`${linkedinToDelete.length} LinkedIn duplicate${linkedinToDelete.length !== 1 ? 's' : ''}`);
 
-  const { error } = await db.from('clients').delete().in('id', toDelete);
-  if (error) {
-    console.error('Delete error:', error);
-    showToast('Error: ' + error.message, 'error');
+  if (!confirm(`Found ${parts.join(' and ')}. Delete them and keep the originals?`)) return;
+
+  let errMsg = null;
+
+  if (clientsToDelete.length) {
+    const { error } = await db.from('clients').delete().in('id', clientsToDelete);
+    if (error) errMsg = error.message;
+  }
+
+  if (linkedinToDelete.length) {
+    const { error } = await db.from('linkedin_contacts').delete().in('id', linkedinToDelete);
+    if (error) errMsg = error.message;
+  }
+
+  if (errMsg) {
+    showToast('Error: ' + errMsg, 'error');
     return;
   }
 
-  // Reload from Supabase to ensure UI is in sync
-  await loadClients();
+  // Reload both lists to stay in sync
+  await Promise.all([loadClients(), loadLinkedIn()]);
   applyFiltersAndRender();
-  showToast(`Removed ${toDelete.length} duplicate${toDelete.length !== 1 ? 's' : ''}!`, 'success');
+  renderLinkedInTable();
+  renderStats(document.getElementById('tabLinkedin').classList.contains('active') ? 'linkedin' : 'clients');
+  showToast(`Removed ${totalDups} duplicate${totalDups !== 1 ? 's' : ''}!`, 'success');
 }
 
 // ─── Fix Parentheses in Existing Names ───────────────
