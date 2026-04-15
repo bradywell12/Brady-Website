@@ -1443,6 +1443,7 @@ async function confirmLinkedInImport() {
 
   linkedinContacts = [...inserted, ...linkedinContacts];
   renderLinkedInTable();
+  renderStats('linkedin');
   document.getElementById('linkedinImportModal').style.display = 'none';
   showToast(`${inserted.length} LinkedIn connection${inserted.length !== 1 ? 's' : ''} imported!`, 'success');
   btn.textContent = 'Import All';
