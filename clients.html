@@ -352,6 +352,38 @@ Financial Representative | Northwestern Mutual</textarea>
   </div>
   </div>
 
+  <!-- ===================== LINKEDIN CONTACT MODAL ===================== -->
+  <div class="modal-overlay" id="linkedinContactModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Contact on LinkedIn</h2>
+        <button class="modal-close" onclick="document.getElementById('linkedinContactModal').style.display='none'">&times;</button>
+      </div>
+      <div style="padding:1.5rem 1.75rem;">
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Edit your message below, then click <strong>Copy &amp; Open LinkedIn</strong>. Paste it into their message box on LinkedIn.</p>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="linkedinContactMessage" class="form-input" rows="8">Hi [First Name],
+
+I hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Northwestern Mutual.
+
+I'd love to connect and have a quick conversation about your financial goals — whether that's building wealth, protecting your family, or planning for retirement.
+
+Would you be open to a free, no-obligation chat this week?
+
+Looking forward to connecting,
+Brady Wells
+Financial Representative | Northwestern Mutual</textarea>
+        </div>
+        <div class="modal-actions" style="gap:0.75rem;">
+          <button type="button" class="btn-secondary" onclick="document.getElementById('linkedinContactModal').style.display='none'">Cancel</button>
+          <button type="button" class="btn-primary" id="linkedinContactSendBtn" onclick="copyAndOpenLinkedIn()">&#128172; Copy &amp; Open LinkedIn</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.75rem;">* Your message is copied to clipboard. Click Message on their profile and paste.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- ===================== LINKEDIN IMPORT MODAL ===================== -->
   <div class="modal-overlay" id="linkedinImportModal" style="display:none;">
     <div class="modal modal-wide">

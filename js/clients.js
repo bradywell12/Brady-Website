@@ -1264,6 +1264,31 @@ function escHtml(str) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// ─── LinkedIn Contact ─────────────────────────────────
+let linkedinContactUrl = '';
+
+function openLinkedInContact(url, firstName) {
+  linkedinContactUrl = url;
+  const template = document.getElementById('linkedinContactMessage').value;
+  // Personalize with first name
+  document.getElementById('linkedinContactMessage').value =
+    template.replace(/\[First Name\]/gi, firstName || 'there');
+  document.getElementById('linkedinContactModal').style.display = 'flex';
+}
+
+function copyAndOpenLinkedIn() {
+  const msg = document.getElementById('linkedinContactMessage').value;
+  navigator.clipboard.writeText(msg).then(() => {
+    showToast('Message copied! Opening LinkedIn...', 'success');
+    setTimeout(() => window.open(linkedinContactUrl, '_blank'), 500);
+    document.getElementById('linkedinContactModal').style.display = 'none';
+  }).catch(() => {
+    // Fallback if clipboard blocked
+    window.open(linkedinContactUrl, '_blank');
+    document.getElementById('linkedinContactModal').style.display = 'none';
+  });
+}
+
 // ─── LinkedIn Tab ─────────────────────────────────────
 async function loadLinkedIn() {
   const { data, error } = await db
@@ -1299,7 +1324,7 @@ function renderLinkedInTable() {
         : '<span style="color:#9ca3af">—</span>'}</td>
       <td>
         ${c.linkedin_url
-          ? `<a href="${escHtml(c.linkedin_url)}" target="_blank" class="btn-linkedin-contact">&#128172; Contact</a>`
+          ? `<button class="btn-linkedin-contact" onclick="openLinkedInContact('${escHtml(c.linkedin_url)}','${escHtml(c.first_name || '')}')">&#128172; Contact</button>`
           : '<span style="color:#9ca3af;font-size:0.82rem">No URL</span>'}
       </td>
       <td>
