@@ -1015,11 +1015,6 @@ function switchPortalTab(tab) {
     }
   } else {
     renderStats('clients');
-    // Close compose panel when leaving LinkedIn tab
-    const panel = document.getElementById('outreachCompose');
-    const btn   = document.getElementById('composeEmailBtn');
-    if (panel) panel.style.display = 'none';
-    if (btn)   btn.textContent = '✉ Compose Email';
   }
 }
 
@@ -1345,10 +1340,15 @@ function escHtml(str) {
 function toggleComposePanel() {
   const panel = document.getElementById('outreachCompose');
   const btn   = document.getElementById('composeEmailBtn');
-  const open  = getComputedStyle(panel).display !== 'none';
-  panel.style.display = open ? 'none' : 'grid';
-  btn.textContent = open ? '\u2709 Compose Email' : '\u2715 Close Compose';
-  if (!open) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const open  = panel.style.display !== 'none';
+  if (open) {
+    panel.style.display = 'none';
+    btn.textContent = '\u2709 Compose Email';
+  } else {
+    renderOutreachList();
+    panel.style.display = 'flex';
+    btn.textContent = '\u2715 Close Compose';
+  }
 }
 
 // ─── Add LinkedIn Connection ──────────────────────────

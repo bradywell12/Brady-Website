@@ -293,59 +293,6 @@ Financial Representative | Northwestern Mutual</textarea>
           </div>
         </div>
 
-        <!-- Email Compose -->
-        <div class="outreach-layout" id="outreachCompose" style="display:none;">
-          <div class="outreach-contacts">
-            <div class="outreach-contacts-header">
-              <h3>Contacts</h3>
-              <div class="outreach-search-wrap">
-                <span class="search-icon">&#128269;</span>
-                <input type="text" id="outreachSearch" class="crm-search" placeholder="Search contacts..." />
-              </div>
-              <div class="outreach-select-bar">
-                <label style="font-size:0.83rem;color:var(--text-muted);cursor:pointer;">
-                  <input type="checkbox" id="outreachSelectAll" /> Select all with email
-                </label>
-                <span class="outreach-selected-count" id="outreachSelectedCount">0 selected</span>
-              </div>
-            </div>
-            <div class="outreach-contact-list" id="outreachContactList"></div>
-          </div>
-
-          <div class="outreach-compose">
-            <h3>Compose Email</h3>
-            <div class="outreach-to-wrap">
-              <span class="outreach-to-label">To:</span>
-              <div class="outreach-to-pills" id="outreachToPills">
-                <span style="color:var(--text-muted);font-size:0.85rem">Select contacts on the left</span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Subject</label>
-              <input type="text" id="outreachSubject" class="form-input" value="Let's Connect — A Conversation About Your Financial Future" />
-            </div>
-            <div class="form-group">
-              <label>Message <span style="color:var(--text-muted);font-size:0.8rem">(use [First Name] to personalize)</span></label>
-              <textarea id="outreachBody" class="form-input" rows="12">Hi [First Name],
-
-I hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Northwestern Mutual.
-
-I'm reaching out because I'd love to have a quick 20-minute conversation about your financial goals — whether that's building wealth, protecting your family, or planning for retirement.
-
-Would you be open to a free, no-obligation consultation this week?
-
-Looking forward to connecting,
-
-Brady Wells
-Financial Representative | Northwestern Mutual</textarea>
-            </div>
-            <div class="outreach-actions">
-              <button class="btn-primary" id="outreachSendBtn">Send Emails</button>
-              <button class="btn-outline" id="outreachCopyBtn">Copy Message</button>
-            </div>
-            <p class="compose-note" id="outreachSendNote">Select contacts on the left then click Send Emails.</p>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -415,6 +362,67 @@ Financial Representative | Northwestern Mutual</textarea>
           <button type="button" class="btn-primary" id="linkedinContactSendBtn" onclick="copyAndOpenLinkedIn()">&#128172; Copy &amp; Open LinkedIn</button>
         </div>
         <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.75rem;">* Your message is copied to clipboard. Click Message on their profile and paste.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== COMPOSE EMAIL MODAL ===================== -->
+  <div class="modal-overlay" id="outreachCompose" style="display:none;">
+    <div class="modal modal-wide" style="max-width:900px;">
+      <div class="modal-header">
+        <h2>Compose Outreach Email</h2>
+        <button class="modal-close" onclick="toggleComposePanel()">&times;</button>
+      </div>
+      <div style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;padding:1.25rem 1.5rem 1.5rem;">
+        <!-- Contact picker -->
+        <div>
+          <div style="margin-bottom:0.75rem;">
+            <div class="outreach-search-wrap" style="margin-bottom:0.5rem;">
+              <span class="search-icon">&#128269;</span>
+              <input type="text" id="outreachSearch" class="crm-search" placeholder="Search contacts..." />
+            </div>
+            <div class="outreach-select-bar">
+              <label style="font-size:0.83rem;color:var(--text-muted);cursor:pointer;">
+                <input type="checkbox" id="outreachSelectAll" /> Select all with email
+              </label>
+              <span class="outreach-selected-count" id="outreachSelectedCount">0 selected</span>
+            </div>
+          </div>
+          <div class="outreach-contact-list" id="outreachContactList" style="max-height:400px;overflow-y:auto;"></div>
+        </div>
+        <!-- Compose -->
+        <div>
+          <div class="outreach-to-wrap" style="margin-bottom:1rem;">
+            <span class="outreach-to-label">To:</span>
+            <div class="outreach-to-pills" id="outreachToPills">
+              <span style="color:var(--text-muted);font-size:0.85rem">Select contacts on the left</span>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0.75rem;">
+            <label>Subject</label>
+            <input type="text" id="outreachSubject" class="form-input" value="Let's Connect — A Conversation About Your Financial Future" />
+          </div>
+          <div class="form-group" style="margin-bottom:0.75rem;">
+            <label>Message <span style="color:var(--text-muted);font-size:0.8rem">(use [First Name] to personalize)</span></label>
+            <textarea id="outreachBody" class="form-input" rows="10">Hi [First Name],
+
+I hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Northwestern Mutual.
+
+I'm reaching out because I'd love to have a quick 20-minute conversation about your financial goals — whether that's building wealth, protecting your family, or planning for retirement.
+
+Would you be open to a free, no-obligation consultation this week?
+
+Looking forward to connecting,
+
+Brady Wells
+Financial Representative | Northwestern Mutual</textarea>
+          </div>
+          <div class="outreach-actions">
+            <button class="btn-primary" id="outreachSendBtn">Send Emails</button>
+            <button class="btn-outline" id="outreachCopyBtn">Copy Message</button>
+          </div>
+          <p class="compose-note" id="outreachSendNote">Select contacts on the left then click Send Emails.</p>
+        </div>
       </div>
     </div>
   </div>
