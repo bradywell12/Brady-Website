@@ -234,12 +234,31 @@ function renderTable() {
     }));
 }
 
-function renderStats() {
-  document.getElementById('statTotal').textContent     = clients.length;
-  document.getElementById('statNew').textContent       = clients.filter(c => c.status === 'New Lead').length;
-  document.getElementById('statContacted').textContent = clients.filter(c => c.status === 'Contacted' || c.status === 'Meeting Scheduled').length;
-  document.getElementById('statClient').textContent    = clients.filter(c => c.status === 'Active Client').length;
-  document.getElementById('statNotCalled').textContent = clients.filter(c => !c.last_called).length;
+function renderStats(tab = 'clients') {
+  const clientBox   = document.getElementById('statClientBox');
+  const notCalledBox = document.getElementById('statNotCalledBox');
+
+  if (tab === 'linkedin') {
+    document.getElementById('labelTotal').textContent     = 'LinkedIn Connections';
+    document.getElementById('labelNew').textContent       = 'Not Contacted';
+    document.getElementById('labelContacted').textContent = 'Contacted';
+    document.getElementById('statTotal').textContent      = linkedinContacts.length;
+    document.getElementById('statNew').textContent        = linkedinContacts.filter(c => !c.contacted_at).length;
+    document.getElementById('statContacted').textContent  = linkedinContacts.filter(c => c.contacted_at).length;
+    clientBox.style.display   = 'none';
+    notCalledBox.style.display = 'none';
+  } else {
+    document.getElementById('labelTotal').textContent     = 'Total Contacts';
+    document.getElementById('labelNew').textContent       = 'New Leads';
+    document.getElementById('labelContacted').textContent = 'Contacted';
+    document.getElementById('statTotal').textContent      = clients.length;
+    document.getElementById('statNew').textContent        = clients.filter(c => c.status === 'New Lead').length;
+    document.getElementById('statContacted').textContent  = clients.filter(c => c.status === 'Contacted' || c.status === 'Meeting Scheduled').length;
+    document.getElementById('statClient').textContent     = clients.filter(c => c.status === 'Active Client').length;
+    document.getElementById('statNotCalled').textContent  = clients.filter(c => !c.last_called).length;
+    clientBox.style.display   = '';
+    notCalledBox.style.display = '';
+  }
 }
 
 function showTableLoading(on) {
@@ -990,7 +1009,13 @@ function switchPortalTab(tab) {
 
   if (tab === 'linkedin') {
     renderOutreachList();
-    if (linkedinContacts.length === 0) loadLinkedIn().then(renderLinkedInTable);
+    if (linkedinContacts.length === 0) {
+      loadLinkedIn().then(() => { renderLinkedInTable(); renderStats('linkedin'); });
+    } else {
+      renderStats('linkedin');
+    }
+  } else {
+    renderStats('clients');
   }
 }
 
@@ -1266,27 +1291,34 @@ function escHtml(str) {
 
 // ─── LinkedIn Contact ─────────────────────────────────
 let linkedinContactUrl = '';
+let linkedinContactId  = null;
 
-function openLinkedInContact(url, firstName) {
+function openLinkedInContact(url, firstName, id) {
   linkedinContactUrl = url;
-  const template = document.getElementById('linkedinContactMessage').value;
-  // Personalize with first name
+  linkedinContactId  = id;
+  const base = `Hi [First Name],\n\nI hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Northwestern Mutual.\n\nI'd love to connect and have a quick conversation about your financial goals — whether that's building wealth, protecting your family, or planning for retirement.\n\nWould you be open to a free, no-obligation chat this week?\n\nLooking forward to connecting,\nBrady Wells\nFinancial Representative | Northwestern Mutual`;
   document.getElementById('linkedinContactMessage').value =
-    template.replace(/\[First Name\]/gi, firstName || 'there');
+    base.replace(/\[First Name\]/gi, firstName || 'there');
   document.getElementById('linkedinContactModal').style.display = 'flex';
 }
 
-function copyAndOpenLinkedIn() {
+async function copyAndOpenLinkedIn() {
   const msg = document.getElementById('linkedinContactMessage').value;
+  // Mark as contacted in DB
+  if (linkedinContactId) {
+    const now = new Date().toISOString();
+    await db.from('linkedin_contacts').update({ contacted_at: now }).eq('id', linkedinContactId);
+    const c = linkedinContacts.find(x => x.id === linkedinContactId);
+    if (c) c.contacted_at = now;
+    renderStats('linkedin');
+  }
   navigator.clipboard.writeText(msg).then(() => {
     showToast('Message copied! Opening LinkedIn...', 'success');
     setTimeout(() => window.open(linkedinContactUrl, '_blank'), 500);
-    document.getElementById('linkedinContactModal').style.display = 'none';
   }).catch(() => {
-    // Fallback if clipboard blocked
     window.open(linkedinContactUrl, '_blank');
-    document.getElementById('linkedinContactModal').style.display = 'none';
   });
+  document.getElementById('linkedinContactModal').style.display = 'none';
 }
 
 // ─── LinkedIn Tab ─────────────────────────────────────
@@ -1324,7 +1356,7 @@ function renderLinkedInTable() {
         : '<span style="color:#9ca3af">—</span>'}</td>
       <td>
         ${c.linkedin_url
-          ? `<button class="btn-linkedin-contact" onclick="openLinkedInContact('${escHtml(c.linkedin_url)}','${escHtml(c.first_name || '')}')">&#128172; Contact</button>`
+          ? `<button class="btn-linkedin-contact${c.contacted_at ? ' contacted' : ''}" onclick="openLinkedInContact('${escHtml(c.linkedin_url)}','${escHtml(c.first_name || '')}',${c.id})">&#128172; ${c.contacted_at ? 'Contacted ✓' : 'Contact'}</button>`
           : '<span style="color:#9ca3af;font-size:0.82rem">No URL</span>'}
       </td>
       <td>

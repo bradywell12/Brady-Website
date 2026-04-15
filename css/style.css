@@ -608,6 +608,8 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
   white-space: nowrap;
 }
 .btn-linkedin-contact:hover { background: #005f8f; }
+.btn-linkedin-contact.contacted { background: #16a34a; }
+.btn-linkedin-contact.contacted:hover { background: #15803d; }
 
 .market-inline-select {
   font-size: 0.75rem;
