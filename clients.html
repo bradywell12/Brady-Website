@@ -262,20 +262,13 @@ Financial Representative | Northwestern Mutual</textarea>
     <div id="outreachTab" style="display:none;">
       <div class="container">
 
-        <!-- LinkedIn Connections Table -->
-        <div class="crm-header-actions" style="margin:1.5rem 0 1rem;">
-          <h3 style="color:var(--text);font-size:1.1rem;font-weight:600;">LinkedIn Connections</h3>
-          <button class="btn-primary" onclick="openAddLinkedInModal()">+ Add Connection</button>
-          <button class="btn-primary" id="importLinkedInBtn" onclick="openLinkedInImportModal()">Import LinkedIn CSV</button>
-          <button class="btn-secondary" id="composeEmailBtn" onclick="toggleComposePanel()">&#9993; Compose Email</button>
-        </div>
-        <!-- LinkedIn Filters -->
+        <!-- LinkedIn Toolbar -->
         <div class="crm-toolbar" id="linkedinToolbar">
           <div class="crm-search-wrap">
             <span class="search-icon">&#128269;</span>
             <input type="text" id="liSearch" class="crm-search" placeholder="Search by name or email..." />
           </div>
-          <div class="crm-filters">
+          <div class="crm-filter-group">
             <select id="liContactedFilter" class="crm-select">
               <option value="">All Connections</option>
               <option value="not_contacted">Not Contacted</option>
@@ -286,6 +279,11 @@ Financial Representative | Northwestern Mutual</textarea>
               <option value="has_email">Has Email</option>
               <option value="no_email">No Email</option>
             </select>
+          </div>
+          <div class="crm-action-group">
+            <button class="btn-outline" onclick="openAddLinkedInModal()">+ Add Connection</button>
+            <button class="btn-outline" id="importLinkedInBtn" onclick="openLinkedInImportModal()">Import CSV</button>
+            <button class="btn-outline" id="composeEmailBtn" onclick="toggleComposePanel()">&#9993; Compose Email</button>
           </div>
         </div>
 
