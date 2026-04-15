@@ -339,15 +339,19 @@ function bindEvents() {
   document.getElementById('cancelAddModal').addEventListener('click', closeAddModal);
   document.getElementById('clientForm').addEventListener('submit', saveClient);
 
-  // Import modal
-  document.getElementById('openImportModal').addEventListener('click', openImportModal);
-  document.getElementById('emptyImportBtn')?.addEventListener('click', openImportModal);
+  // Import pane inside Add Client modal
+  document.getElementById('emptyImportBtn')?.addEventListener('click', () => { openAddModal(); switchAddTab('import'); });
+  document.getElementById('cancelAddModal2').addEventListener('click', closeAddModal);
+  document.getElementById('confirmImport2').addEventListener('click', confirmImport2);
+  document.getElementById('csvFileInput2').addEventListener('change', handleCSVFile2);
+
+  // Old import modal (kept for any remaining references)
   document.getElementById('closeImportModal').addEventListener('click', closeImportModal);
   document.getElementById('cancelImport').addEventListener('click', cancelImport);
   document.getElementById('confirmImport').addEventListener('click', confirmImport);
   document.getElementById('csvFileInput').addEventListener('change', handleCSVFile);
 
-  // Drag & drop
+  // Drag & drop (original drop zone in old import modal)
   const dropZone = document.getElementById('dropZone');
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
@@ -399,11 +403,74 @@ function bindEvents() {
 
 // ─── Add / Edit Modal ─────────────────────────────────
 function openAddModal() {
-  document.getElementById('modalTitle').textContent    = 'Add New Client';
+  document.getElementById('modalTitle').textContent    = 'Add Client';
   document.getElementById('saveClientBtn').textContent = 'Save Client';
   document.getElementById('editClientId').value        = '';
   document.getElementById('clientForm').reset();
+  switchAddTab('manual');
   document.getElementById('addModal').style.display = 'flex';
+}
+
+function switchAddTab(tab) {
+  const isManual = tab === 'manual';
+  document.getElementById('addPaneManual').style.display = isManual ? '' : 'none';
+  document.getElementById('addPaneImport').style.display = isManual ? 'none' : 'block';
+
+  const btnManual = document.getElementById('addTabManual');
+  const btnImport = document.getElementById('addTabImport');
+  btnManual.style.borderBottomColor = isManual ? 'var(--gold)' : 'transparent';
+  btnManual.style.color = isManual ? 'var(--navy)' : 'var(--text-muted)';
+  btnManual.style.fontWeight = isManual ? '600' : '500';
+  btnImport.style.borderBottomColor = isManual ? 'transparent' : 'var(--gold)';
+  btnImport.style.color = isManual ? 'var(--text-muted)' : 'var(--navy)';
+  btnImport.style.fontWeight = isManual ? '500' : '600';
+
+  if (!isManual) {
+    // Reset import pane state
+    pendingImport = [];
+    document.getElementById('importPreview2').style.display = 'none';
+    document.getElementById('dropZone2').style.display      = 'block';
+    document.getElementById('csvFileInput2').value          = '';
+    document.getElementById('confirmImport2').disabled      = true;
+    // Wire drag & drop each time pane opens
+    const dz = document.getElementById('dropZone2');
+    dz.ondragover  = e => { e.preventDefault(); dz.classList.add('drag-over'); };
+    dz.ondragleave = () => dz.classList.remove('drag-over');
+    dz.ondrop      = e => {
+      e.preventDefault();
+      dz.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleCSVFile2({ target: { files: [file] } });
+    };
+  }
+}
+
+function handleCSVFile2(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.name.endsWith('.vcf') || file.name.endsWith('.vcard')) {
+    parseVCF(file, true);
+  } else if (file.name.endsWith('.csv')) {
+    parseCSV(file, true);
+  } else {
+    showToast('Please upload a .vcf or .csv file', 'error');
+  }
+}
+
+async function confirmImport2() {
+  if (!pendingImport.length) return;
+  const btn = document.getElementById('confirmImport2');
+  btn.textContent = 'Importing...';
+  btn.disabled = true;
+  const inserted = await bulkInsertClients(pendingImport);
+  if (inserted.length) {
+    clients.unshift(...inserted);
+    applyFiltersAndRender();
+    showToast(`Imported ${inserted.length} contact${inserted.length !== 1 ? 's' : ''}!`, 'success');
+    closeAddModal();
+  }
+  btn.textContent = 'Import All';
+  btn.disabled = false;
 }
 
 function openEditModal(id) {
@@ -536,7 +603,10 @@ function handleCSVFile(e) {
 }
 
 // ─── vCard (.vcf) Parser — handles iPhone/iCloud exports ─
-function parseVCF(file) {
+let importPane2 = false; // true when using the Import CSV tab inside Add Client modal
+
+function parseVCF(file, pane2 = false) {
+  importPane2 = pane2;
   const reader = new FileReader();
   reader.onload = e => {
     const text = e.target.result;
@@ -607,7 +677,8 @@ function parseVCF(file) {
   reader.readAsText(file);
 }
 
-function parseCSV(file) {
+function parseCSV(file, pane2 = false) {
+  importPane2 = pane2;
   const reader = new FileReader();
   reader.onload = e => {
     const rows = parseCSVText(e.target.result);
@@ -694,22 +765,30 @@ function getCol(row, idx) {
 }
 
 function showPreview() {
-  document.getElementById('previewCount').textContent    = pendingImport.length;
-  document.getElementById('dropZone').style.display      = 'none';
-  document.getElementById('importPreview').style.display = 'block';
-
-  document.getElementById('previewTableBody').innerHTML =
-    pendingImport.slice(0, 100).map(c => `
-      <tr>
-        <td>${escHtml(c.firstName)}</td>
-        <td>${escHtml(c.lastName)}</td>
-        <td>${escHtml(c.phone)  || '<span style="color:#9ca3af">—</span>'}</td>
-        <td>${escHtml(c.email)  || '<span style="color:#9ca3af">—</span>'}</td>
-        <td>${escHtml(c.company)|| '<span style="color:#9ca3af">—</span>'}</td>
-      </tr>`).join('')
+  const rowsHtml = pendingImport.slice(0, 100).map(c => `
+    <tr>
+      <td>${escHtml(c.firstName)}</td>
+      <td>${escHtml(c.lastName)}</td>
+      <td>${escHtml(c.phone)  || '<span style="color:#9ca3af">—</span>'}</td>
+      <td>${escHtml(c.email)  || '<span style="color:#9ca3af">—</span>'}</td>
+      <td>${escHtml(c.company)|| '<span style="color:#9ca3af">—</span>'}</td>
+    </tr>`).join('')
     + (pendingImport.length > 100
       ? `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:.75rem">…and ${pendingImport.length - 100} more</td></tr>`
       : '');
+
+  if (importPane2) {
+    document.getElementById('dropZone2').style.display       = 'none';
+    document.getElementById('importPreview2').style.display  = 'block';
+    document.getElementById('importCount2').textContent      = `${pendingImport.length} contacts ready to import`;
+    document.getElementById('importPreviewBody2').innerHTML  = rowsHtml;
+    document.getElementById('confirmImport2').disabled       = false;
+  } else {
+    document.getElementById('previewCount').textContent      = pendingImport.length;
+    document.getElementById('dropZone').style.display        = 'none';
+    document.getElementById('importPreview').style.display   = 'block';
+    document.getElementById('previewTableBody').innerHTML    = rowsHtml;
+  }
 }
 
 async function confirmImport() {

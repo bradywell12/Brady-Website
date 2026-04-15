@@ -98,7 +98,6 @@
         </div>
         <div class="crm-header-actions">
           <button class="btn-primary" id="openAddModal">+ Add Client</button>
-          <button class="btn-secondary" id="openImportModal">Import Contacts</button>
           <button class="btn-secondary" id="removeDupsBtn">Remove Duplicates</button>
           <button class="btn-logout" id="logoutBtn">Sign Out</button>
         </div>
@@ -475,75 +474,116 @@ Financial Representative | Northwestern Mutual</textarea>
 
   <!-- ===================== ADD CLIENT MODAL ===================== -->
   <div class="modal-overlay" id="addModal" style="display:none;">
-    <div class="modal">
+    <div class="modal modal-wide">
       <div class="modal-header">
-        <h2 id="modalTitle">Add New Client</h2>
+        <h2 id="modalTitle">Add Client</h2>
         <button class="modal-close" id="closeAddModal">&times;</button>
       </div>
-      <form id="clientForm">
-        <input type="hidden" id="editClientId" />
-        <div class="form-row">
-          <div class="form-group">
-            <label>First Name *</label>
-            <input type="text" id="cfFirstName" class="form-input" placeholder="John" required />
+      <!-- Tab switcher -->
+      <div style="display:flex;border-bottom:1px solid var(--border);padding:0 1.75rem;">
+        <button id="addTabManual" onclick="switchAddTab('manual')"
+          style="padding:0.65rem 1.1rem;background:none;border:none;border-bottom:2px solid var(--gold);color:var(--navy);font-weight:600;cursor:pointer;font-size:0.9rem;margin-bottom:-1px;">
+          Add Manually
+        </button>
+        <button id="addTabImport" onclick="switchAddTab('import')"
+          style="padding:0.65rem 1.1rem;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-weight:500;cursor:pointer;font-size:0.9rem;margin-bottom:-1px;">
+          Import CSV
+        </button>
+      </div>
+      <!-- Manual entry -->
+      <div id="addPaneManual">
+        <form id="clientForm">
+          <input type="hidden" id="editClientId" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input type="text" id="cfFirstName" class="form-input" placeholder="John" required />
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input type="text" id="cfLastName" class="form-input" placeholder="Smith" required />
+            </div>
           </div>
-          <div class="form-group">
-            <label>Last Name *</label>
-            <input type="text" id="cfLastName" class="form-input" placeholder="Smith" required />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="cfPhone" class="form-input" placeholder="(555) 000-0000" />
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="cfEmail" class="form-input" placeholder="john@email.com" />
+            </div>
           </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Status</label>
+              <select id="cfStatus" class="form-input">
+                <option value="New Lead">New Lead</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Meeting Scheduled">Meeting Scheduled</option>
+                <option value="Active Client">Active Client</option>
+                <option value="Not Interested">Not Interested</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Source</label>
+              <select id="cfSource" class="form-input">
+                <option value="Manual Entry">Manual Entry</option>
+                <option value="Referral">Referral</option>
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="Website Contact Form">Website Contact Form</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Market Type</label>
+              <select id="cfMarket" class="form-input">
+                <option value="">-- Select --</option>
+                <option value="Young Professional">Young Professional</option>
+                <option value="Established">Established</option>
+                <option value="Retirement">Retirement</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>Notes</label>
+            <textarea id="cfNotes" class="form-input" rows="3" placeholder="Any notes about this contact..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="cancelAddModal">Cancel</button>
+            <button type="submit" class="btn-primary" id="saveClientBtn">Save Client</button>
+          </div>
+        </form>
+      </div>
+      <!-- Import CSV pane (contents injected from importModal) -->
+      <div id="addPaneImport" style="display:none;padding:1.5rem 1.75rem;">
+        <div class="import-instructions">
+          <p>Upload a <strong>.csv</strong> or <strong>.vcf</strong> file to import contacts in bulk.</p>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" id="cfPhone" class="form-input" placeholder="(555) 000-0000" />
-          </div>
-          <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" id="cfEmail" class="form-input" placeholder="john@email.com" />
-          </div>
+        <div class="drop-zone" id="dropZone2">
+          <div class="drop-icon">&#128196;</div>
+          <p>Drag &amp; drop your file here, or</p>
+          <label class="btn-secondary" style="cursor:pointer;">
+            Browse File <input type="file" id="csvFileInput2" accept=".csv,.vcf" style="display:none;" />
+          </label>
+          <p class="drop-hint">Supports LinkedIn Connections.csv and vCard (.vcf) files</p>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Status</label>
-            <select id="cfStatus" class="form-input">
-              <option value="New Lead">New Lead</option>
-              <option value="Contacted">Contacted</option>
-              <option value="Meeting Scheduled">Meeting Scheduled</option>
-              <option value="Active Client">Active Client</option>
-              <option value="Not Interested">Not Interested</option>
-            </select>
+        <div id="importPreview2" style="display:none;">
+          <p id="importCount2" style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;"></p>
+          <div class="table-wrap" style="max-height:260px;overflow-y:auto;">
+            <table class="clients-table" id="importPreviewTable2">
+              <thead><tr><th>First Name</th><th>Last Name</th><th>Phone</th><th>Email</th><th>Source</th></tr></thead>
+              <tbody id="importPreviewBody2"></tbody>
+            </table>
           </div>
-          <div class="form-group">
-            <label>Source</label>
-            <select id="cfSource" class="form-input">
-              <option value="Manual Entry">Manual Entry</option>
-              <option value="Referral">Referral</option>
-              <option value="LinkedIn">LinkedIn</option>
-              <option value="Website Contact Form">Website Contact Form</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Market Type</label>
-            <select id="cfMarket" class="form-input">
-              <option value="">-- Select --</option>
-              <option value="Young Professional">Young Professional</option>
-              <option value="Established">Established</option>
-              <option value="Retirement">Retirement</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group full">
-          <label>Notes</label>
-          <textarea id="cfNotes" class="form-input" rows="3" placeholder="Any notes about this contact..."></textarea>
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" id="cancelAddModal">Cancel</button>
-          <button type="submit" class="btn-primary" id="saveClientBtn">Save Client</button>
+          <button type="button" class="btn-secondary" id="cancelAddModal2">Cancel</button>
+          <button type="button" class="btn-primary" id="confirmImport2" disabled>Import All</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
