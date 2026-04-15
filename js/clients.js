@@ -998,10 +998,12 @@ function switchPortalTab(tab) {
 
   const clientEls = [
     document.querySelector('.crm-toolbar'),
-    document.getElementById('composePanel'),
     document.querySelector('.table-wrap'),
   ];
   clientEls.forEach(el => { if (el) el.style.display = tab === 'clients' ? '' : 'none'; });
+  // Always keep composePanel hidden on tab switch — only opens via Email Selected button
+  const composePanel = document.getElementById('composePanel');
+  if (composePanel) composePanel.style.display = 'none';
   document.getElementById('outreachTab').style.display = tab === 'linkedin' ? 'block' : 'none';
 
   if (tab === 'linkedin') {
@@ -1343,9 +1345,9 @@ function escHtml(str) {
 function toggleComposePanel() {
   const panel = document.getElementById('outreachCompose');
   const btn   = document.getElementById('composeEmailBtn');
-  const open  = panel.style.display !== 'none';
+  const open  = getComputedStyle(panel).display !== 'none';
   panel.style.display = open ? 'none' : 'flex';
-  btn.textContent = open ? '✉ Compose Email' : '✕ Close Compose';
+  btn.textContent = open ? '\u2709 Compose Email' : '\u2715 Close Compose';
 }
 
 // ─── Add LinkedIn Connection ──────────────────────────
