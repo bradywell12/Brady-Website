@@ -97,8 +97,6 @@
           <p class="crm-subtitle">Welcome back, <span id="advisorName">Advisor</span> — manage your clients, track outreach, and grow your book of business.</p>
         </div>
         <div class="crm-header-actions">
-          <button class="btn-primary" id="openAddModal">+ Add Client</button>
-          <button class="btn-secondary" id="removeDupsBtn">Remove Duplicates</button>
           <button class="btn-logout" id="logoutBtn">Sign Out</button>
         </div>
       </div>
@@ -175,7 +173,9 @@
           </select>
         </div>
         <div class="crm-action-group">
+          <button class="btn-primary" id="openAddModal">+ Add Client</button>
           <button class="btn-outline" id="exportBtn">Export CSV</button>
+          <button class="btn-outline" id="removeDupsBtn">Remove Duplicates</button>
         </div>
       </div>
 
@@ -272,9 +272,10 @@ Financial Representative | Northwestern Mutual</textarea>
             </select>
           </div>
           <div class="crm-action-group">
-            <button class="btn-outline" onclick="openAddLinkedInModal()">+ Add Connection</button>
+            <button class="btn-primary" onclick="openAddLinkedInModal()">+ Add Connection</button>
             <button class="btn-outline" id="importLinkedInBtn" onclick="openLinkedInImportModal()">Import CSV</button>
             <button class="btn-outline" id="composeEmailBtn" onclick="toggleComposePanel()">&#9993; Compose Email</button>
+            <button class="btn-outline" id="removeDupsBtnLi" onclick="removeDuplicates()">Remove Duplicates</button>
           </div>
         </div>
 
