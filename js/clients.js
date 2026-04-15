@@ -1184,6 +1184,13 @@ function showToast(msg, type = '') {
 
 // ─── Remove Duplicates ────────────────────────────────
 async function removeDuplicates() {
+  const btn = document.getElementById('removeDupsBtn');
+  btn.textContent = 'Scanning...';
+  btn.disabled = true;
+
+  // Make sure LinkedIn contacts are loaded even if tab hasn't been visited
+  if (linkedinContacts.length === 0) await loadLinkedIn();
+
   // --- Clients: dedup by name+phone, name+email, or phone+email ---
   const clientsToDelete = [];
   const clientSeen = new Map();
@@ -1233,6 +1240,9 @@ async function removeDuplicates() {
 
   const totalDups = clientsToDelete.length + linkedinToDelete.length;
 
+  btn.textContent = 'Remove Duplicates';
+  btn.disabled = false;
+
   if (totalDups === 0) {
     showToast('No duplicates found — all clean!', 'success');
     return;
@@ -1243,6 +1253,9 @@ async function removeDuplicates() {
   if (linkedinToDelete.length) parts.push(`${linkedinToDelete.length} LinkedIn duplicate${linkedinToDelete.length !== 1 ? 's' : ''}`);
 
   if (!confirm(`Found ${parts.join(' and ')}. Delete them and keep the originals?`)) return;
+
+  btn.textContent = 'Deleting...';
+  btn.disabled = true;
 
   let errMsg = null;
 
@@ -1255,6 +1268,9 @@ async function removeDuplicates() {
     const { error } = await db.from('linkedin_contacts').delete().in('id', linkedinToDelete);
     if (error) errMsg = error.message;
   }
+
+  btn.textContent = 'Remove Duplicates';
+  btn.disabled = false;
 
   if (errMsg) {
     showToast('Error: ' + errMsg, 'error');
