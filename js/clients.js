@@ -1018,30 +1018,59 @@ function switchPortalTab(tab) {
 }
 
 // ─── Email Outreach Tab ───────────────────────────────
-let outreachSelected = new Set();
+let outreachSelected = new Set(); // keys like "c:123" or "li:456"
+
+function resolveOutreachContact(key) {
+  const [type, id] = key.split(':');
+  const numId = parseInt(id);
+  return type === 'li'
+    ? linkedinContacts.find(x => x.id === numId)
+    : clients.find(x => x.id === numId);
+}
 
 function renderOutreachList() {
   const search = (document.getElementById('outreachSearch').value || '').toLowerCase();
   const list   = document.getElementById('outreachContactList');
 
-  const contacts = clients.filter(c => {
-    const name = `${c.first_name} ${c.last_name}`.toLowerCase();
-    return !search || name.includes(search) || (c.email || '').toLowerCase().includes(search);
-  });
+  // Merge clients + LinkedIn contacts, dedupe by email
+  const seenEmails = new Set();
+  const allContacts = [];
 
-  if (contacts.length === 0) {
+  for (const c of clients) {
+    const key = `c:${c.id}`;
+    const email = (c.email || '').toLowerCase();
+    if (email) seenEmails.add(email);
+    const name = `${c.first_name} ${c.last_name}`.toLowerCase();
+    if (!search || name.includes(search) || email.includes(search)) {
+      allContacts.push({ key, c, badge: 'Client' });
+    }
+  }
+  for (const c of linkedinContacts) {
+    const key = `li:${c.id}`;
+    const email = (c.email || '').toLowerCase();
+    // Skip if same email already in clients
+    if (email && seenEmails.has(email)) continue;
+    const name = `${c.first_name} ${c.last_name}`.toLowerCase();
+    if (!search || name.includes(search) || email.includes(search)) {
+      allContacts.push({ key, c, badge: 'LinkedIn' });
+    }
+  }
+
+  if (allContacts.length === 0) {
     list.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-muted)">No contacts found.</div>`;
     return;
   }
 
-  list.innerHTML = contacts.map(c => `
-    <div class="outreach-contact-item ${outreachSelected.has(c.id) ? 'selected' : ''}"
-         data-id="${c.id}">
-      <input type="checkbox" class="outreach-check" data-id="${c.id}"
-             ${outreachSelected.has(c.id) ? 'checked' : ''}
+  list.innerHTML = allContacts.map(({ key, c, badge }) => `
+    <div class="outreach-contact-item ${outreachSelected.has(key) ? 'selected' : ''}" data-key="${key}">
+      <input type="checkbox" class="outreach-check" data-key="${key}"
+             ${outreachSelected.has(key) ? 'checked' : ''}
              ${!c.email ? 'disabled' : ''} />
       <div class="outreach-contact-info">
-        <div class="outreach-contact-name">${escHtml(c.first_name || '')} ${escHtml(c.last_name || '')}</div>
+        <div class="outreach-contact-name">
+          ${escHtml(c.first_name || '')} ${escHtml(c.last_name || '')}
+          <span style="font-size:0.7rem;color:var(--text-muted);margin-left:4px">${badge}</span>
+        </div>
         ${c.email
           ? `<div class="outreach-contact-email">${escHtml(c.email)}</div>`
           : `<div class="outreach-no-email">No email on file</div>`}
@@ -1051,14 +1080,13 @@ function renderOutreachList() {
 
   list.querySelectorAll('.outreach-check').forEach(cb => {
     cb.addEventListener('change', e => {
-      const id = parseInt(e.target.dataset.id);
-      e.target.checked ? outreachSelected.add(id) : outreachSelected.delete(id);
+      const key = e.target.dataset.key;
+      e.target.checked ? outreachSelected.add(key) : outreachSelected.delete(key);
       e.target.closest('.outreach-contact-item').classList.toggle('selected', e.target.checked);
       updateOutreachUI();
     });
   });
 
-  // Click anywhere on row to toggle
   list.querySelectorAll('.outreach-contact-item').forEach(row => {
     row.addEventListener('click', e => {
       if (e.target.type === 'checkbox') return;
@@ -1075,22 +1103,28 @@ function updateOutreachUI() {
   document.getElementById('outreachSelectedCount').textContent = `${count} selected`;
 
   const pills = document.getElementById('outreachToPills');
-  if (count === 0) {
+  const selectedContacts = [...outreachSelected]
+    .map(resolveOutreachContact)
+    .filter(c => c && c.email);
+
+  if (selectedContacts.length === 0) {
     pills.innerHTML = `<span style="color:var(--text-muted);font-size:0.85rem">Select contacts on the left</span>`;
     document.getElementById('outreachSendNote').textContent = 'Select contacts on the left then click Send Emails.';
   } else {
-    const selected = clients.filter(c => outreachSelected.has(c.id) && c.email);
-    pills.innerHTML = selected.map(c =>
+    pills.innerHTML = selectedContacts.map(c =>
       `<span class="outreach-pill">${escHtml(c.first_name)} ${escHtml(c.last_name)}</span>`
     ).join('');
     document.getElementById('outreachSendNote').textContent =
-      `${selected.length} email${selected.length !== 1 ? 's' : ''} will be sent.`;
+      `${selectedContacts.length} email${selectedContacts.length !== 1 ? 's' : ''} will be sent.`;
   }
 
   // Sync select-all checkbox
-  const withEmail = clients.filter(c => c.email);
+  const allWithEmail = [
+    ...clients.map(c => `c:${c.id}`).filter(k => resolveOutreachContact(k)?.email),
+    ...linkedinContacts.map(c => `li:${c.id}`).filter(k => resolveOutreachContact(k)?.email),
+  ];
   document.getElementById('outreachSelectAll').checked =
-    withEmail.length > 0 && withEmail.every(c => outreachSelected.has(c.id));
+    allWithEmail.length > 0 && allWithEmail.every(k => outreachSelected.has(k));
 }
 
 function bindOutreachTab() {
@@ -1098,7 +1132,10 @@ function bindOutreachTab() {
 
   document.getElementById('outreachSelectAll').addEventListener('change', e => {
     clients.filter(c => c.email).forEach(c =>
-      e.target.checked ? outreachSelected.add(c.id) : outreachSelected.delete(c.id)
+      e.target.checked ? outreachSelected.add(`c:${c.id}`) : outreachSelected.delete(`c:${c.id}`)
+    );
+    linkedinContacts.filter(c => c.email).forEach(c =>
+      e.target.checked ? outreachSelected.add(`li:${c.id}`) : outreachSelected.delete(`li:${c.id}`)
     );
     renderOutreachList();
   });
@@ -1112,7 +1149,7 @@ function bindOutreachTab() {
 }
 
 async function sendOutreachEmails() {
-  const selected = clients.filter(c => outreachSelected.has(c.id) && c.email);
+  const selected = [...outreachSelected].map(resolveOutreachContact).filter(c => c && c.email);
   if (selected.length === 0) { showToast('No contacts with emails selected.', 'error'); return; }
 
   if (EJS_SERVICE_ID.startsWith('PASTE') || EJS_OUTREACH_TEMPLATE.startsWith('PASTE')) {
@@ -1147,8 +1184,11 @@ async function sendOutreachEmails() {
       btn.textContent = `Sending ${sent + failed} / ${selected.length}...`;
     }
 
-    // Update statuses
-    const toUpdate = selected.slice(0, sent).filter(c => c.status === 'New Lead').map(c => c.id);
+    // Update status for clients (not LinkedIn contacts — they have no status field)
+    const toUpdate = selected
+      .slice(0, sent)
+      .filter(c => c.status === 'New Lead' && clients.find(x => x.id === c.id))
+      .map(c => c.id);
     if (toUpdate.length > 0) {
       await updateStatusBatch(toUpdate, 'Contacted');
       toUpdate.forEach(id => {
@@ -1343,9 +1383,14 @@ function toggleComposePanel() {
     panel.style.display = 'none';
     if (btn) btn.textContent = '\u2709 Compose Email';
   } else {
-    renderOutreachList();
     panel.style.display = 'flex';
     if (btn) btn.textContent = '\u2715 Close Compose';
+    // Load LinkedIn contacts if not yet fetched, then populate list
+    if (linkedinContacts.length === 0) {
+      loadLinkedIn().then(() => renderOutreachList());
+    } else {
+      renderOutreachList();
+    }
   }
 }
 
