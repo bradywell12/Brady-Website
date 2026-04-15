@@ -368,17 +368,13 @@ function bindEvents() {
     else showToast('Please upload a .vcf or .csv file', 'error');
   });
 
-  // Email
-  document.getElementById('emailSelectedBtn').addEventListener('click', openComposePanel);
   document.getElementById('closeCompose').addEventListener('click', () => {
     document.getElementById('composePanel').style.display = 'none';
   });
   document.getElementById('sendEmailBtn').addEventListener('click', sendBulkEmail);
   document.getElementById('copyEmailBtn').addEventListener('click', copyEmailBody);
 
-  // Export / Delete
   document.getElementById('exportBtn').addEventListener('click', exportCSV);
-  document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
 
   // Remove duplicates button
   document.getElementById('removeDupsBtn').addEventListener('click', removeDuplicates);
@@ -570,10 +566,6 @@ async function deleteSelected() {
 
 // ─── Selection UI ─────────────────────────────────────
 function updateSelectionUI() {
-  const count = selectedIds.size;
-  document.getElementById('selectedCount').textContent    = count;
-  document.getElementById('emailSelectedBtn').disabled    = count === 0;
-  document.getElementById('deleteSelectedBtn').disabled   = count === 0;
   document.getElementById('selectAll').checked =
     filteredClients.length > 0 && filteredClients.every(c => selectedIds.has(c.id));
 }
