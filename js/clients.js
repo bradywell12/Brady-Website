@@ -1016,6 +1016,11 @@ function switchPortalTab(tab) {
     }
   } else {
     renderStats('clients');
+    // Close compose panel when leaving LinkedIn tab
+    const panel = document.getElementById('outreachCompose');
+    const btn   = document.getElementById('composeEmailBtn');
+    if (panel) panel.style.display = 'none';
+    if (btn)   btn.textContent = '✉ Compose Email';
   }
 }
 
@@ -1287,6 +1292,15 @@ function escHtml(str) {
   return str.toString()
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ─── Compose Email Toggle ─────────────────────────────
+function toggleComposePanel() {
+  const panel = document.getElementById('outreachCompose');
+  const btn   = document.getElementById('composeEmailBtn');
+  const open  = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'flex';
+  btn.textContent = open ? '✉ Compose Email' : '✕ Close Compose';
 }
 
 // ─── Add LinkedIn Connection ──────────────────────────

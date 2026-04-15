@@ -99,7 +99,6 @@
         <div class="crm-header-actions">
           <button class="btn-primary" id="openAddModal">+ Add Client</button>
           <button class="btn-secondary" id="openImportModal">Import Contacts</button>
-          <button class="btn-secondary" id="fixNamesBtn">Fix Names</button>
           <button class="btn-secondary" id="removeDupsBtn">Remove Duplicates</button>
           <button class="btn-logout" id="logoutBtn">Sign Out</button>
         </div>
@@ -270,6 +269,7 @@ Financial Representative | Northwestern Mutual</textarea>
           <h3 style="color:var(--text);font-size:1.1rem;font-weight:600;">LinkedIn Connections</h3>
           <button class="btn-primary" onclick="openAddLinkedInModal()">+ Add Connection</button>
           <button class="btn-primary" id="importLinkedInBtn" onclick="openLinkedInImportModal()">Import LinkedIn CSV</button>
+          <button class="btn-secondary" id="composeEmailBtn" onclick="toggleComposePanel()">&#9993; Compose Email</button>
         </div>
         <div class="table-wrap" style="margin-bottom:2rem;">
           <table class="clients-table" id="linkedinTable" style="display:none;">
@@ -294,7 +294,7 @@ Financial Representative | Northwestern Mutual</textarea>
         </div>
 
         <!-- Email Compose -->
-        <div class="outreach-layout">
+        <div class="outreach-layout" id="outreachCompose" style="display:none;">
           <div class="outreach-contacts">
             <div class="outreach-contacts-header">
               <h3>Contacts</h3>
