@@ -596,6 +596,19 @@ h1,h2,h3,h4 { font-family: 'Playfair Display', serif; line-height: 1.2; }
 .market-retirement  { background: #fef9c3; color: #a16207; border: 1px solid #fde047; }
 .market-business    { background: #fdf4ff; color: #7e22ce; border: 1px solid #d8b4fe; }
 
+.btn-linkedin-contact {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #0077b5;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-linkedin-contact:hover { background: #005f8f; }
+
 .market-inline-select {
   font-size: 0.75rem;
   padding: 0.2rem 0.4rem;

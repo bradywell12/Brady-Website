@@ -1298,6 +1298,11 @@ function renderLinkedInTable() {
         ? `<a href="${escHtml(c.linkedin_url)}" target="_blank" style="color:#0077b5;font-size:0.85rem">View Profile</a>`
         : '<span style="color:#9ca3af">—</span>'}</td>
       <td>
+        ${c.linkedin_url
+          ? `<a href="${escHtml(c.linkedin_url)}" target="_blank" class="btn-linkedin-contact">&#128172; Contact</a>`
+          : '<span style="color:#9ca3af;font-size:0.82rem">No URL</span>'}
+      </td>
+      <td>
         <button class="action-btn delete" title="Delete" data-lid="${c.id}">&#128465;</button>
       </td>
     </tr>`).join('');
