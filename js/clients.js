@@ -1346,8 +1346,9 @@ function toggleComposePanel() {
   const panel = document.getElementById('outreachCompose');
   const btn   = document.getElementById('composeEmailBtn');
   const open  = getComputedStyle(panel).display !== 'none';
-  panel.style.display = open ? 'none' : 'flex';
+  panel.style.display = open ? 'none' : 'grid';
   btn.textContent = open ? '\u2709 Compose Email' : '\u2715 Close Compose';
+  if (!open) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── Add LinkedIn Connection ──────────────────────────
