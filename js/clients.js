@@ -399,7 +399,8 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
       "timeline": "...",
       "product": "Northwestern Mutual product or service if relevant, else empty string"
     }
-  ]
+  ],
+  "conclusion": "2-3 sentence 'What To Do Now' paragraph — the single most important next step Brady should discuss with this client at their meeting, written as a clear action plan."
 }
 Use real numbers based on their income/expenses. allocation values are percentages of monthly income (current vs recommended). Include 4-5 recommendations. Priority must be High, Medium, or Low.`;
 
@@ -493,7 +494,8 @@ const SAMPLE_AI = {
       timeline: "Start within 6 months",
       product: "Northwestern Mutual Investment Services"
     }
-  ]
+  ],
+  conclusion: "The most important next step is to get life insurance in place immediately — at 22 with no coverage, this is the biggest risk on the table. At the same meeting, set up a $330/month automatic transfer to a dedicated emergency fund account. These two moves alone will give this client a real financial foundation to build everything else on."
 };
 
 function loadTestRecommendations() {
@@ -559,6 +561,11 @@ function renderAIOutput(ai) {
       </div>
       <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:0.75rem;">Recommendations</div>
       ${recsHTML}
+      ${ai.conclusion ? `
+      <div style="background:linear-gradient(135deg,#064e3b,#065f46);color:#fff;border-radius:10px;padding:1rem 1.25rem;margin-top:0.5rem;">
+        <div style="font-size:0.75rem;font-weight:700;opacity:0.7;margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:.05em;">&#9989; What To Do Now</div>
+        <p style="margin:0;line-height:1.65;opacity:0.95;font-size:0.9rem;">${escHtml(ai.conclusion)}</p>
+      </div>` : ''}
     </div>`;
 }
 
@@ -656,6 +663,11 @@ function downloadRecommendations() {
 
     <div class="section-title">Recommendations</div>
     ${recSections}
+    ${ai.conclusion ? `
+    <div style="background:#064e3b;color:white;padding:14px 18px;border-radius:6px;margin-top:8px;">
+      <div style="font-size:11px;font-weight:700;opacity:0.8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">What To Do Now</div>
+      <p style="margin:0;font-size:12px;line-height:1.6;">${ai.conclusion}</p>
+    </div>` : ''}
   </div>
   <div class="footer">
     This report was prepared by Brady Wells, Financial Representative Intern at Northwestern Mutual. For informational purposes only. &copy; ${new Date().getFullYear()} Northwestern Mutual.
