@@ -245,6 +245,32 @@ function renderTable() {
 // ─── Client Financial Profile ─────────────────────────
 let currentProfileId = null;
 let lastAIResult = null;
+let growthChartInstance = null;
+
+const INVESTMENT_RATES = {
+  'Roth IRA': 7,
+  '401(k)': 7,
+  'Whole Life Insurance': 4.5,
+  'Term Life + Invest the Difference': 8,
+  'Brokerage Account': 8,
+  '529 College Savings Plan': 6,
+  'Universal Life Insurance': 5,
+};
+
+function computeGrowth(monthly, annualRate, years) {
+  const r = annualRate / 100 / 12;
+  const n = years * 12;
+  if (r === 0) return monthly * n;
+  return monthly * ((Math.pow(1 + r, n) - 1) / r);
+}
+
+function getInvestFocus() {
+  return {
+    type:       (document.getElementById('investFocusType')?.value || 'Roth IRA'),
+    monthly:    parseFloat(document.getElementById('investMonthly')?.value) || 0,
+    goalAge:    parseInt(document.getElementById('investGoalAge')?.value)   || 65,
+  };
+}
 
 function openClientProfile(id) {
   const c = clients.find(x => x.id === id);
@@ -352,8 +378,15 @@ async function getAIRecommendations() {
   const c = clients.find(x => x.id === currentProfileId);
   if (!c) return;
 
-  const fp = c.financial_profile || {};
-  const fmt = n => n ? '$' + Number(n).toLocaleString() : 'Unknown';
+  const fp     = c.financial_profile || {};
+  const fmt    = n => n ? '$' + Number(n).toLocaleString() : 'Unknown';
+  const focus  = getInvestFocus();
+  const rate   = INVESTMENT_RATES[focus.type] || 7;
+  const years  = focus.goalAge - (fp.age || 30);
+  const safeYears = Math.max(years, 1);
+  const growNow    = focus.monthly > 0 ? computeGrowth(focus.monthly, rate, safeYears) : null;
+  const growDelay5 = focus.monthly > 0 ? computeGrowth(focus.monthly, rate, Math.max(safeYears - 5, 1)) : null;
+  const fmtK = n => n ? '$' + Math.round(n).toLocaleString() : 'N/A';
 
   document.getElementById('aiEmptyState').style.display = 'none';
   document.getElementById('aiOutput').style.display     = 'none';
@@ -373,6 +406,15 @@ Life Insurance: ${fp.insurance || 'None'}
 Retirement Account: ${fp.retirement || 'None'}
 Risk Tolerance: ${fp.risk || 'Unknown'}
 Financial Goals: ${fp.goals || 'Not specified'}
+
+INVESTMENT FOCUS FOR THIS MEETING:
+Product/Strategy: ${focus.type}
+Monthly Contribution: ${focus.monthly > 0 ? '$' + focus.monthly : 'Not specified'}
+Goal Age: ${focus.goalAge}
+Assumed Annual Return: ${rate}%
+Projected Value Starting Now (${safeYears} years): ${fmtK(growNow)}
+Projected Value If Starting 5 Years Later: ${fmtK(growDelay5)}
+Cost of Waiting 5 Years: ${growNow && growDelay5 ? fmtK(growNow - growDelay5) + ' less' : 'N/A'}
 
 Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
 {
@@ -394,15 +436,16 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
     {
       "title": "...",
       "priority": "High",
-      "why": "Specific explanation referencing their actual numbers (income, debt, age, etc.)",
-      "action": "Concrete, specific action — include exact dollar amounts, specific policy types (e.g. 20-year $500,000 Term Life vs Whole Life and why), specific account types, specific monthly contribution amounts based on their income",
+      "why": "Specific explanation referencing their actual numbers",
+      "action": "Concrete action with exact dollar amounts, specific policy types and coverage amounts, account types, monthly contributions based on their income",
       "timeline": "...",
-      "product": "Specific Northwestern Mutual product name and type — e.g. 'Northwestern Mutual 20-Year Term Life Insurance' or 'Northwestern Mutual Whole Life Policy' — explain briefly why this specific product fits their situation. Empty string if not applicable."
+      "product": "Specific NM product — include policy type, coverage amount, and why it beats alternatives for their situation. Empty string if not applicable."
     }
   ],
-  "conclusion": "3-4 sentence 'What To Do Now' — the clearest next steps Brady should walk through with this client at the meeting. Reference specific products, dollar amounts, and timelines. Make it feel like a confident, personalized action plan."
+  "product_rationale": "3-4 sentences explaining exactly why ${focus.type} is the right choice for this specific client. Reference their age, income, tax situation, goals, and the projected ${fmtK(growNow)} outcome. Compare to the alternative options they could have chosen and why those are inferior for their situation.",
+  "conclusion": "3-4 sentence next steps — specific products, dollar amounts, and timelines. Mention the cost of waiting (${fmtK(growNow && growDelay5 ? growNow - growDelay5 : null)} less if they wait 5 years). Make it feel urgent and personalized."
 }
-Use real numbers throughout. Allocation values are % of monthly income. Include 4-5 recommendations. Priority must be High, Medium, or Low. Be specific — generic advice is not helpful. Reference their actual income, debt, age, and goals in every recommendation.`;
+Use real numbers throughout. Allocation values are % of monthly income. Include 4-5 recommendations. Priority must be High, Medium, or Low.`;
 
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/claude-recommend', {
@@ -426,6 +469,7 @@ Use real numbers throughout. Allocation values are % of monthly income. Include 
     document.getElementById('aiOutput').style.display  = 'block';
     document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString();
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : `<p>${escHtml(text)}</p>`;
+    if (ai) renderGrowthChart();
   } catch (err) {
     document.getElementById('aiLoading').style.display    = 'none';
     document.getElementById('aiEmptyState').style.display = 'block';
@@ -504,6 +548,99 @@ function loadTestRecommendations() {
   document.getElementById('aiOutput').style.display  = 'block';
   document.getElementById('aiTimestamp').textContent = 'Sample data — no API call made';
   document.getElementById('aiContent').innerHTML = renderAIOutput(SAMPLE_AI);
+  renderGrowthChart();
+}
+
+function renderGrowthChart() {
+  const canvas = document.getElementById('growthChart');
+  if (!canvas) return;
+  if (growthChartInstance) { growthChartInstance.destroy(); growthChartInstance = null; }
+
+  const c = clients.find(x => x.id === currentProfileId);
+  const fp = c?.financial_profile || {};
+  const focus = getInvestFocus();
+  const rate = INVESTMENT_RATES[focus.type] || 7;
+  const currentAge = fp.age || 25;
+  const goalAge = focus.goalAge || 65;
+  const monthly = focus.monthly || 500;
+  const years = Math.max(goalAge - currentAge, 1);
+
+  const labels = [];
+  const dataNow = [];
+  const dataWait = [];
+  const dataNone = [];
+
+  for (let y = 0; y <= years; y++) {
+    labels.push(`Age ${currentAge + y}`);
+    dataNow.push(Math.round(computeGrowth(monthly, rate, y)));
+    dataWait.push(y < 5 ? 0 : Math.round(computeGrowth(monthly, rate, y - 5)));
+    dataNone.push(Math.round(monthly * 12 * y)); // no growth, just savings
+  }
+
+  growthChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Start Now',
+          data: dataNow,
+          borderColor: '#0d1b3e',
+          backgroundColor: 'rgba(13,27,62,0.06)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.4,
+        },
+        {
+          label: 'Wait 5 Years',
+          data: dataWait,
+          borderColor: '#c9a84c',
+          backgroundColor: 'rgba(201,168,76,0.06)',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.4,
+          borderDash: [5, 4],
+        },
+        {
+          label: 'No Investment (savings only)',
+          data: dataNone,
+          borderColor: '#94a3b8',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.4,
+          borderDash: [3, 3],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 16 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { font: { size: 10 }, maxTicksLimit: 8 },
+          grid: { display: false },
+        },
+        y: {
+          ticks: {
+            font: { size: 10 },
+            callback: v => '$' + (v >= 1000000 ? (v/1000000).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(0)+'K' : v),
+          },
+          grid: { color: '#f1f5f9' },
+        },
+      },
+    },
+  });
 }
 
 function renderAIOutput(ai) {
@@ -563,6 +700,15 @@ function renderAIOutput(ai) {
       </div>
       <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:0.85rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.4rem;">Recommendations</div>
       ${recsHTML}
+      ${ai.product_rationale ? `
+      <div style="border:1px solid #e2e8f0;border-left:4px solid var(--gold);padding:1rem 1.25rem;margin-bottom:0.85rem;background:#fffbf0;">
+        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#92400e;margin-bottom:0.5rem;">Why ${escHtml(document.getElementById('investFocusType')?.value || 'This Product')} Is the Right Choice</div>
+        <p style="margin:0;font-size:0.85rem;color:#1e293b;line-height:1.65;">${escHtml(ai.product_rationale)}</p>
+      </div>` : ''}
+      <div style="margin-bottom:1.25rem;">
+        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:0.85rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.4rem;">Growth Projection</div>
+        <canvas id="growthChart" style="max-height:220px;"></canvas>
+      </div>
       ${ai.conclusion ? `
       <div style="background:var(--navy);color:#fff;padding:1.1rem 1.25rem;margin-top:0.75rem;">
         <div style="font-size:0.68rem;font-weight:700;opacity:0.6;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:.08em;">Next Steps</div>
@@ -576,6 +722,9 @@ function downloadRecommendations() {
   if (!c || !lastAIResult) { showToast('Generate recommendations first.', 'error'); return; }
   const ai = lastAIResult;
   const fp = c.financial_profile || {};
+  const focus = getInvestFocus();
+  const rate = INVESTMENT_RATES[focus.type] || 7;
+  const safeYears = Math.max((focus.goalAge || 65) - (fp.age || 25), 1);
   const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
   const date = new Date().toLocaleDateString();
   const priorityColor = { High: '#c0392b', Medium: '#d97706', Low: '#16a34a' };
@@ -663,11 +812,36 @@ function downloadRecommendations() {
       ${allocationRows}
     </table>
 
+    ${ai.product_rationale ? `
+    <div class="section-title">Why ${focus.type} Is the Right Choice</div>
+    <div style="border-left:4px solid #c9a84c;padding:10px 14px;background:#fffbf0;margin-bottom:16px;">
+      <p style="margin:0;font-size:12px;line-height:1.65;">${ai.product_rationale}</p>
+    </div>` : ''}
+
+    <div class="section-title">Growth Projection — ${focus.type}</div>
+    <p style="font-size:11px;color:#64748b;margin:0 0 8px;">Contributing $${Number(focus.monthly).toLocaleString()}/month at ${rate}% annual return</p>
+    <table>
+      <tr>
+        <th>Age</th><th>Years Invested</th><th>Start Now</th><th>Wait 5 Years</th><th>Cost of Waiting</th>
+      </tr>
+      ${[5,10,15,20,25,30].filter(y => y <= safeYears).map(y => {
+        const now  = Math.round(computeGrowth(focus.monthly, rate, y));
+        const wait = y > 5 ? Math.round(computeGrowth(focus.monthly, rate, y - 5)) : 0;
+        return `<tr>
+          <td>${(fp.age || 25) + y}</td>
+          <td>${y} years</td>
+          <td style="font-weight:600;color:#0d1b3e;">$${now.toLocaleString()}</td>
+          <td>$${wait.toLocaleString()}</td>
+          <td style="color:#b91c1c;">$${(now - wait).toLocaleString()} less</td>
+        </tr>`;
+      }).join('')}
+    </table>
+
     <div class="section-title">Recommendations</div>
     ${recSections}
     ${ai.conclusion ? `
-    <div style="background:#064e3b;color:white;padding:14px 18px;border-radius:6px;margin-top:8px;">
-      <div style="font-size:11px;font-weight:700;opacity:0.8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">What To Do Now</div>
+    <div style="background:#0d1b3e;color:white;padding:14px 18px;margin-top:8px;">
+      <div style="font-size:11px;font-weight:700;opacity:0.8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Next Steps</div>
       <p style="margin:0;font-size:12px;line-height:1.6;">${ai.conclusion}</p>
     </div>` : ''}
   </div>
