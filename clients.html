@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Client Portal | Financial.Planning</title>
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
 </head>
@@ -224,6 +224,7 @@ Financial Representative | Northwestern Mutual</textarea>
               <th><input type="checkbox" id="selectAll" /></th>
               <th class="sortable" data-col="first_name">First Name <span class="sort-arrow">&#8597;</span></th>
               <th class="sortable" data-col="last_name">Last Name <span class="sort-arrow">&#8597;</span></th>
+              <th>How I Know</th>
               <th>Phone</th>
               <th class="sortable" data-col="status">Status <span class="sort-arrow">&#8597;</span></th>
               <th class="sortable" data-col="market_type">Market <span class="sort-arrow">&#8597;</span></th>
@@ -285,6 +286,7 @@ Financial Representative | Northwestern Mutual</textarea>
               <tr>
                 <th class="sortable" id="liSortFirst" data-col="first_name">First Name <span class="sort-arrow">&#8597;</span></th>
                 <th class="sortable" id="liSortLast"  data-col="last_name">Last Name <span class="sort-arrow">&#8597;</span></th>
+                <th>How I Know</th>
                 <th>Email</th>
                 <th>LinkedIn URL</th>
                 <th>Contact</th>
@@ -333,6 +335,10 @@ Financial Representative | Northwestern Mutual</textarea>
         <div class="form-group full">
           <label>LinkedIn URL</label>
           <input type="url" id="liUrl" class="form-input" placeholder="https://www.linkedin.com/in/johnsmith" />
+        </div>
+        <div class="form-group full">
+          <label>How I Know Them</label>
+          <input type="text" id="liHowIKnow" class="form-input" placeholder="e.g. College classmate, coworker, met at networking event..." />
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="document.getElementById('addLinkedInModal').style.display='none'">Cancel</button>
@@ -557,6 +563,10 @@ Financial Representative | Northwestern Mutual</textarea>
             </div>
           </div>
           <div class="form-group full">
+            <label>How I Know Them</label>
+            <input type="text" id="cfHowIKnow" class="form-input" placeholder="e.g. College friend, referral from Jane, met at church..." />
+          </div>
+          <div class="form-group full">
             <label>Notes</label>
             <textarea id="cfNotes" class="form-input" rows="3" placeholder="Any notes about this contact..."></textarea>
           </div>
@@ -699,8 +709,8 @@ Financial Representative | Northwestern Mutual</textarea>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script src="js/supabase-config.js?v=3"></script>
-  <script src="js/clients.js?v=3"></script>
+  <script src="js/supabase-config.js?v=5"></script>
+  <script src="js/clients.js?v=5"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');

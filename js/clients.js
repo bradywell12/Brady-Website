@@ -159,6 +159,7 @@ function renderTable() {
       <td><input type="checkbox" class="row-check" data-id="${c.id}" ${selectedIds.has(c.id) ? 'checked' : ''} /></td>
       <td>${escHtml(c.first_name || '')}</td>
       <td>${escHtml(c.last_name  || '')}</td>
+      <td style="max-width:160px;font-size:0.82rem;color:var(--text-muted);">${c.how_i_know ? escHtml(c.how_i_know.length > 40 ? c.how_i_know.slice(0,40)+'…' : c.how_i_know) : '<span style="color:#d1d5db">—</span>'}</td>
       <td style="white-space:nowrap">
         ${c.phone
           ? `<a href="tel:${escHtml(c.phone)}" style="color:var(--text)">${escHtml(c.phone)}</a>`
@@ -475,13 +476,14 @@ function openEditModal(id) {
   document.getElementById('modalTitle').textContent    = 'Edit Client';
   document.getElementById('saveClientBtn').textContent = 'Update Client';
   document.getElementById('editClientId').value        = id;
-  document.getElementById('cfFirstName').value = c.first_name || '';
-  document.getElementById('cfLastName').value  = c.last_name  || '';
-  document.getElementById('cfPhone').value     = c.phone      || '';
-  document.getElementById('cfEmail').value     = c.email      || '';
+  document.getElementById('cfFirstName').value = c.first_name  || '';
+  document.getElementById('cfLastName').value  = c.last_name   || '';
+  document.getElementById('cfPhone').value     = c.phone       || '';
+  document.getElementById('cfEmail').value     = c.email       || '';
   document.getElementById('cfStatus').value    = c.status      || 'New Lead';
   document.getElementById('cfSource').value    = c.source      || 'Manual Entry';
   document.getElementById('cfMarket').value    = c.market_type || '';
+  document.getElementById('cfHowIKnow').value  = c.how_i_know  || '';
   document.getElementById('cfNotes').value     = c.notes       || '';
   document.getElementById('addModal').style.display = 'flex';
 }
@@ -503,6 +505,7 @@ async function saveClient(e) {
     status:      document.getElementById('cfStatus').value,
     source:      document.getElementById('cfSource').value,
     market_type: document.getElementById('cfMarket').value || null,
+    how_i_know:  document.getElementById('cfHowIKnow').value.trim() || null,
     notes:       document.getElementById('cfNotes').value.trim(),
   };
 
@@ -1487,6 +1490,7 @@ async function saveLinkedInContact(e) {
     last_name:    document.getElementById('liLastName').value.trim(),
     email:        document.getElementById('liEmail').value.trim().toLowerCase() || null,
     linkedin_url: document.getElementById('liUrl').value.trim() || null,
+    how_i_know:   document.getElementById('liHowIKnow').value.trim() || null,
   };
 
   if (editId) {
@@ -1630,6 +1634,7 @@ function renderLinkedInTable() {
     <tr>
       <td>${escHtml(c.first_name || '')}</td>
       <td>${escHtml(c.last_name  || '')}</td>
+      <td style="max-width:160px;font-size:0.82rem;color:var(--text-muted);">${c.how_i_know ? escHtml(c.how_i_know.length > 40 ? c.how_i_know.slice(0,40)+'…' : c.how_i_know) : '<span style="color:#d1d5db">—</span>'}</td>
       <td>${c.email
         ? `<a href="mailto:${escHtml(c.email)}" style="color:var(--accent)">${escHtml(c.email)}</a>`
         : '<span style="color:#9ca3af">—</span>'}</td>
@@ -1652,10 +1657,11 @@ function renderLinkedInTable() {
       const id = parseInt(btn.dataset.lid);
       const c = linkedinContacts.find(x => x.id === id);
       if (!c) return;
-      document.getElementById('liFirstName').value = c.first_name || '';
-      document.getElementById('liLastName').value  = c.last_name  || '';
-      document.getElementById('liEmail').value     = c.email      || '';
-      document.getElementById('liUrl').value       = c.linkedin_url || '';
+      document.getElementById('liFirstName').value  = c.first_name   || '';
+      document.getElementById('liLastName').value   = c.last_name    || '';
+      document.getElementById('liEmail').value      = c.email        || '';
+      document.getElementById('liUrl').value        = c.linkedin_url || '';
+      document.getElementById('liHowIKnow').value   = c.how_i_know   || '';
       document.getElementById('addLinkedInModal').querySelector('h2').textContent = 'Edit Connection';
       document.getElementById('linkedinAddForm').dataset.editId = id;
       document.getElementById('addLinkedInModal').style.display = 'flex';
