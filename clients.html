@@ -831,6 +831,28 @@ Financial Representative | Northwestern Mutual</textarea>
     </div>
   </div>
 
+  <!-- ===================== ANTHROPIC KEY MODAL ===================== -->
+  <div class="modal-overlay" id="apiKeyModal" style="display:none;" onclick="if(event.target===this)closeApiKeyModal()">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h2>Enter Anthropic API Key</h2>
+        <button class="modal-close" onclick="closeApiKeyModal()">&times;</button>
+      </div>
+      <div style="padding:1.25rem 1.75rem 0;">
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Your key is saved only in this browser and never sent to GitHub or any server other than Anthropic directly.</p>
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="password" id="apiKeyInput" class="form-input" placeholder="sk-ant-api03-..." />
+        </div>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem;">Get your key at <strong>console.anthropic.com</strong> → API Keys. You only need to enter this once.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeApiKeyModal()">Cancel</button>
+        <button type="button" class="btn-primary" onclick="saveApiKey()">Save &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===================== CALL OUTCOME MODAL ===================== -->
   <div class="modal-overlay" id="callModal" style="display:none;">
     <div class="modal">
@@ -869,8 +891,8 @@ Financial Representative | Northwestern Mutual</textarea>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script src="js/supabase-config.js?v=8"></script>
-  <script src="js/clients.js?v=7"></script>
+  <script src="js/supabase-config.js?v=9"></script>
+  <script src="js/clients.js?v=9"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');

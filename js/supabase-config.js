@@ -22,12 +22,7 @@ const EJS_CONTACT_TEMPLATE = 'template_7j7sep8';   // e.g. 'template_abc123'
 const EJS_OUTREACH_TEMPLATE= 'template_ab5zros';  // e.g. 'template_xyz456'
 const EJS_PUBLIC_KEY       = '-_wPZUI9pKJkHXqvL';       // e.g. 'user_AbCdEfGh'
 
-/* =====================================================
-   Anthropic (Claude) API Key
-   -----------------------------------------------------
-   1. Go to console.anthropic.com → API Keys
-   2. Create a new key and paste it below
-   ===================================================== */
-const ANTHROPIC_API_KEY = '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';
+// Anthropic API key is stored in localStorage (never committed to repo)
+// The app will prompt you to enter it the first time you use AI Recommendations.
 
 

@@ -327,13 +327,34 @@ async function saveFinancialProfile(e) {
   btn.textContent = 'Save Financial Profile'; btn.disabled = false;
 }
 
+function getStoredApiKey() {
+  return localStorage.getItem('anthropic_api_key') || '';
+}
+
+function closeApiKeyModal() {
+  document.getElementById('apiKeyModal').style.display = 'none';
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    showToast('That doesn\'t look like a valid Anthropic key.', 'error');
+    return;
+  }
+  localStorage.setItem('anthropic_api_key', key);
+  closeApiKeyModal();
+  getAIRecommendations();
+}
+
 async function getAIRecommendations() {
   if (!currentProfileId) return;
   const c = clients.find(x => x.id === currentProfileId);
   if (!c) return;
 
-  if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
-    showToast('Add your Anthropic API key to supabase-config.js first.', 'error');
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    document.getElementById('apiKeyInput').value = '';
+    document.getElementById('apiKeyModal').style.display = 'flex';
     return;
   }
 
@@ -366,19 +387,30 @@ Based on this client's situation, provide 4-5 specific, actionable recommendatio
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-allow-browser': 'true',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1200,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || 'API error');
+
+    if (res.status === 401) {
+      localStorage.removeItem('anthropic_api_key');
+      document.getElementById('aiLoading').style.display    = 'none';
+      document.getElementById('aiEmptyState').style.display = 'block';
+      showToast('API key invalid or expired. Please enter a new one.', 'error');
+      document.getElementById('apiKeyInput').value = '';
+      document.getElementById('apiKeyModal').style.display = 'flex';
+      return;
+    }
+
+    if (!res.ok) throw new Error(data.error?.message || 'API error ' + res.status);
 
     const text = data.content?.[0]?.text || '';
     document.getElementById('aiLoading').style.display = 'none';
