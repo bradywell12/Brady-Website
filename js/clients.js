@@ -289,9 +289,25 @@ function openClientProfile(id) {
   document.getElementById('fpAssets').value     = fp.assets     || '';
   document.getElementById('fpInsurance').value  = fp.insurance  || 'None';
   document.getElementById('fpRetirement').value = fp.retirement || 'None';
-  document.getElementById('fpDependents').value = fp.dependents !== undefined ? fp.dependents : '';
-  document.getElementById('fpMarital').value    = fp.marital    || '';
-  document.getElementById('fpGoals').value      = fp.goals      || '';
+  document.getElementById('fpDependents').value    = fp.dependents !== undefined ? fp.dependents : '';
+  document.getElementById('fpMarital').value        = fp.marital    || '';
+  document.getElementById('fpGoals').value          = fp.goals      || '';
+  document.getElementById('investFocusType').value  = fp.investType  || 'Roth IRA';
+  document.getElementById('investMonthly').value    = fp.investMonthly || '';
+  document.getElementById('investGoalAge').value    = fp.investGoalAge || '';
+
+  // Bind auto-save listeners (replace to avoid duplicates)
+  const autoSaveFields = ['fpAge','fpRisk','fpIncome','fpExpenses','fpDebt','fpAssets',
+    'fpInsurance','fpRetirement','fpDependents','fpMarital','fpGoals',
+    'investFocusType','investMonthly','investGoalAge'];
+  autoSaveFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+    clone.addEventListener('change', scheduleAutoSave);
+    clone.addEventListener('input',  scheduleAutoSave);
+  });
 
   // Reset AI pane
   document.getElementById('aiOutput').style.display  = 'none';
@@ -322,13 +338,8 @@ function switchProfileTab(tab) {
   document.getElementById('profileTabAI').style.fontWeight = isInfo ? '500' : '600';
 }
 
-async function saveFinancialProfile(e) {
-  e.preventDefault();
-  if (!currentProfileId) return;
-  const btn = document.getElementById('saveProfileBtn');
-  btn.textContent = 'Saving...'; btn.disabled = true;
-
-  const fp = {
+function readFinancialProfileForm() {
+  return {
     age:        parseInt(document.getElementById('fpAge').value)        || null,
     risk:       document.getElementById('fpRisk').value                 || null,
     income:     parseFloat(document.getElementById('fpIncome').value)   || null,
@@ -338,20 +349,47 @@ async function saveFinancialProfile(e) {
     insurance:  document.getElementById('fpInsurance').value            || 'None',
     retirement: document.getElementById('fpRetirement').value           || 'None',
     dependents: parseInt(document.getElementById('fpDependents').value) || 0,
-    marital:    document.getElementById('fpMarital').value              || null,
-    goals:      document.getElementById('fpGoals').value.trim()         || null,
+    marital:      document.getElementById('fpMarital').value              || null,
+    goals:        document.getElementById('fpGoals').value.trim()         || null,
+    investType:   document.getElementById('investFocusType')?.value       || 'Roth IRA',
+    investMonthly:parseFloat(document.getElementById('investMonthly')?.value) || null,
+    investGoalAge:parseInt(document.getElementById('investGoalAge')?.value)   || null,
   };
+}
 
+let autoSaveTimer = null;
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  const status = document.getElementById('autoSaveStatus');
+  if (status) status.textContent = 'Saving...';
+  autoSaveTimer = setTimeout(async () => {
+    if (!currentProfileId) return;
+    const fp = readFinancialProfileForm();
+    const ok = await updateClientDB(currentProfileId, { financial_profile: fp });
+    if (ok) {
+      const c = clients.find(x => x.id === currentProfileId);
+      if (c) c.financial_profile = fp;
+      if (status) { status.textContent = 'Saved'; setTimeout(() => { status.textContent = ''; }, 2000); }
+    }
+  }, 800);
+}
+
+async function saveFinancialProfile(e) {
+  e.preventDefault();
+  if (!currentProfileId) return;
+  const btn = document.getElementById('saveProfileBtn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  const fp = readFinancialProfileForm();
   const ok = await updateClientDB(currentProfileId, { financial_profile: fp });
   if (ok) {
     const c = clients.find(x => x.id === currentProfileId);
     if (c) c.financial_profile = fp;
-    showToast('Financial profile saved!', 'success');
-    document.getElementById('aiNoDataWarning').style.display =
-      !fp.income && !fp.goals ? 'block' : 'none';
   }
 
-  btn.textContent = 'Save Financial Profile'; btn.disabled = false;
+  btn.textContent = 'Get Recommendations'; btn.disabled = false;
+  switchProfileTab('ai');
+  getAIRecommendations();
 }
 
 function getStoredApiKey() {

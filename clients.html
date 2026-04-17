@@ -802,23 +802,12 @@ Financial Representative | Northwestern Mutual</textarea>
             <label>Financial Goals</label>
             <textarea id="fpGoals" class="form-input" rows="3" placeholder="e.g. Buy a house in 3 years, retire at 60, pay off student loans, start a college fund..."></textarea>
           </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" onclick="closeClientProfile()">Cancel</button>
-            <button type="submit" class="btn-primary" id="saveProfileBtn">Save Financial Profile</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- AI Recommendations pane -->
-      <div id="profilePaneAI" style="display:none;overflow-y:auto;flex:1;">
-
-        <!-- Investment Focus Form — always visible -->
-        <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:1rem 1.75rem;">
-          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:0.75rem;">Investment Focus</div>
-          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:0.75rem;align-items:end;">
-            <div class="form-group" style="margin:0;">
-              <label style="font-size:0.78rem;">Product / Strategy</label>
-              <select id="investFocusType" class="form-input" style="font-size:0.85rem;">
+          <!-- Investment / Growth Planning -->
+          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:1rem 0 0.75rem;border-top:1px solid var(--border);padding-top:1rem;">Investment & Growth Planning</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Investment / Insurance Focus</label>
+              <select id="investFocusType" class="form-input">
                 <option value="Roth IRA">Roth IRA</option>
                 <option value="401(k)">401(k)</option>
                 <option value="Whole Life Insurance">Whole Life Insurance</option>
@@ -828,20 +817,32 @@ Financial Representative | Northwestern Mutual</textarea>
                 <option value="Universal Life Insurance">Universal Life Insurance</option>
               </select>
             </div>
-            <div class="form-group" style="margin:0;">
-              <label style="font-size:0.78rem;">Monthly Contribution</label>
+            <div class="form-group">
+              <label>Monthly Contribution</label>
               <div style="position:relative;">
-                <span style="position:absolute;left:0.6rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;">$</span>
-                <input type="number" id="investMonthly" class="form-input" placeholder="500" min="0" style="padding-left:1.3rem;font-size:0.85rem;" />
+                <span style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);">$</span>
+                <input type="number" id="investMonthly" class="form-input" placeholder="500" min="0" style="padding-left:1.5rem;" />
               </div>
             </div>
-            <div class="form-group" style="margin:0;">
-              <label style="font-size:0.78rem;">Goal Age</label>
-              <input type="number" id="investGoalAge" class="form-input" placeholder="65" min="1" max="100" style="font-size:0.85rem;" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Goal Age</label>
+              <input type="number" id="investGoalAge" class="form-input" placeholder="65" min="1" max="100" />
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end;">
+              <span id="autoSaveStatus" style="font-size:0.78rem;color:#94a3b8;"></span>
             </div>
           </div>
-        </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeClientProfile()">Close</button>
+            <button type="submit" class="btn-primary" id="saveProfileBtn">Get Recommendations</button>
+          </div>
+        </form>
+      </div>
 
+      <!-- AI Recommendations pane -->
+      <div id="profilePaneAI" style="display:none;overflow-y:auto;flex:1;">
         <div style="padding:1.25rem 1.75rem;">
           <div id="aiEmptyState" style="text-align:center;padding:0.75rem 0 1.25rem;">
             <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Set your investment focus above, then generate recommendations.</p>
@@ -929,7 +930,7 @@ Financial Representative | Northwestern Mutual</textarea>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/supabase-config.js?v=9"></script>
-  <script src="js/clients.js?v=16"></script>
+  <script src="js/clients.js?v=17"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
