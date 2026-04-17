@@ -819,7 +819,10 @@ Financial Representative | Northwestern Mutual</textarea>
         <div id="aiOutput" style="display:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
             <span style="font-size:0.82rem;color:var(--text-muted);" id="aiTimestamp"></span>
-            <button class="btn-outline" style="font-size:0.8rem;padding:0.3rem 0.75rem;" onclick="getAIRecommendations()">&#8635; Refresh</button>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn-outline" style="font-size:0.8rem;padding:0.3rem 0.75rem;" onclick="getAIRecommendations()">&#8635; Refresh</button>
+              <button class="btn-outline" style="font-size:0.8rem;padding:0.3rem 0.75rem;" onclick="downloadRecommendations()">&#11015; Download</button>
+            </div>
           </div>
           <div id="aiContent" style="line-height:1.75;font-size:0.93rem;"></div>
         </div>
@@ -892,7 +895,7 @@ Financial Representative | Northwestern Mutual</textarea>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/supabase-config.js?v=9"></script>
-  <script src="js/clients.js?v=10"></script>
+  <script src="js/clients.js?v=11"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');

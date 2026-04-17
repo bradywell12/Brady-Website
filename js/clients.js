@@ -373,7 +373,34 @@ Retirement Account: ${fp.retirement || 'None'}
 Risk Tolerance: ${fp.risk || 'Unknown'}
 Financial Goals: ${fp.goals || 'Not specified'}
 
-Based on this client's situation, provide 4-5 specific, actionable recommendations Brady should discuss with them. Focus on gaps and opportunities — where are they exposed, what should they prioritize, and which Northwestern Mutual products or services would be most relevant. Format each recommendation with a bold title followed by a clear explanation. Be specific to their numbers and situation.`;
+Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
+{
+  "summary": "2-3 sentence overview of their financial situation",
+  "snapshot": [
+    {"label": "Monthly Income", "value": "$X,XXX"},
+    {"label": "Monthly Surplus", "value": "$X,XXX"},
+    {"label": "Debt-to-Income", "value": "XX%"},
+    {"label": "Savings Rate", "value": "XX%"}
+  ],
+  "allocation": [
+    {"label": "Living Expenses", "current": 0, "recommended": 0},
+    {"label": "Debt Payments", "current": 0, "recommended": 0},
+    {"label": "Emergency Fund", "current": 0, "recommended": 0},
+    {"label": "Retirement", "current": 0, "recommended": 0},
+    {"label": "Investments", "current": 0, "recommended": 0}
+  ],
+  "recommendations": [
+    {
+      "title": "...",
+      "priority": "High",
+      "why": "...",
+      "action": "...",
+      "timeline": "...",
+      "product": "Northwestern Mutual product or service if relevant, else empty string"
+    }
+  ]
+}
+Use real numbers based on their income/expenses. allocation values are percentages of monthly income (current vs recommended). Include 4-5 recommendations. Priority must be High, Medium, or Low.`;
 
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/claude-recommend', {
@@ -390,20 +417,119 @@ Based on this client's situation, provide 4-5 specific, actionable recommendatio
     if (!res.ok) throw new Error(data.error?.message || 'API error ' + res.status);
 
     const text = data.content?.[0]?.text || '';
+    let ai;
+    try {
+      ai = JSON.parse(text);
+    } catch {
+      // fallback plain render if JSON parse fails
+      ai = null;
+    }
+
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
     document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString();
-    document.getElementById('aiContent').innerHTML = text
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br/>')
-      .replace(/^/, '<p>')
-      .replace(/$/, '</p>');
+    document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : `<p>${escHtml(text)}</p>`;
   } catch (err) {
     document.getElementById('aiLoading').style.display    = 'none';
     document.getElementById('aiEmptyState').style.display = 'block';
     showToast('Error: ' + err.message, 'error');
   }
+}
+
+function renderAIOutput(ai) {
+  const priorityColor = { High: '#dc2626', Medium: '#d97706', Low: '#16a34a' };
+
+  // Snapshot cards
+  const snapshotHTML = (ai.snapshot || []).map(s => `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem 1rem;text-align:center;flex:1;min-width:100px;">
+      <div style="font-size:1.1rem;font-weight:700;color:var(--navy);">${escHtml(s.value)}</div>
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${escHtml(s.label)}</div>
+    </div>`).join('');
+
+  // Allocation bars
+  const allocationHTML = (ai.allocation || []).map(a => `
+    <div style="margin-bottom:0.9rem;">
+      <div style="display:flex;justify-content:space-between;font-size:0.83rem;margin-bottom:4px;">
+        <span style="font-weight:500;">${escHtml(a.label)}</span>
+        <span style="color:var(--text-muted);">Current <strong style="color:var(--navy)">${a.current}%</strong> → Recommended <strong style="color:#16a34a">${a.recommended}%</strong></span>
+      </div>
+      <div style="background:#f1f5f9;border-radius:99px;height:10px;overflow:hidden;position:relative;">
+        <div style="position:absolute;left:0;top:0;height:100%;width:${Math.min(a.current,100)}%;background:#94a3b8;border-radius:99px;"></div>
+        <div style="position:absolute;left:0;top:0;height:100%;width:${Math.min(a.recommended,100)}%;background:var(--gold);opacity:0.5;border-radius:99px;"></div>
+      </div>
+    </div>`).join('');
+
+  // Recommendation cards
+  const recsHTML = (ai.recommendations || []).map((r, i) => `
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.85rem;border-left:4px solid ${priorityColor[r.priority] || '#94a3b8'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
+        <strong style="font-size:0.95rem;color:var(--navy);">${i+1}. ${escHtml(r.title)}</strong>
+        <span style="font-size:0.72rem;font-weight:600;padding:2px 8px;border-radius:99px;background:${priorityColor[r.priority]}18;color:${priorityColor[r.priority] || '#64748b'};white-space:nowrap;margin-left:0.5rem;">${escHtml(r.priority)} Priority</span>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin:0 0 0.5rem;">${escHtml(r.why)}</p>
+      <div style="font-size:0.83rem;margin-bottom:0.3rem;"><strong>Action:</strong> ${escHtml(r.action)}</div>
+      <div style="display:flex;gap:1rem;font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem;">
+        <span>&#128337; ${escHtml(r.timeline)}</span>
+        ${r.product ? `<span style="color:#0d6efd;">&#9733; ${escHtml(r.product)}</span>` : ''}
+      </div>
+    </div>`).join('');
+
+  return `
+    <div style="font-size:0.9rem;">
+      <div style="background:linear-gradient(135deg,var(--navy),#1e40af);color:#fff;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem;">
+        <div style="font-size:0.75rem;font-weight:600;opacity:0.7;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:.05em;">Financial Summary</div>
+        <p style="margin:0;line-height:1.6;opacity:0.95;">${escHtml(ai.summary || '')}</p>
+      </div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.25rem;">${snapshotHTML}</div>
+      <div style="margin-bottom:1.25rem;">
+        <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:0.75rem;">Income Allocation — Current vs Recommended</div>
+        <div style="display:flex;gap:1rem;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.6rem;">
+          <span><span style="display:inline-block;width:12px;height:8px;background:#94a3b8;border-radius:2px;margin-right:4px;"></span>Current</span>
+          <span><span style="display:inline-block;width:12px;height:8px;background:var(--gold);opacity:0.6;border-radius:2px;margin-right:4px;"></span>Recommended</span>
+        </div>
+        ${allocationHTML}
+      </div>
+      <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:0.75rem;">Recommendations</div>
+      ${recsHTML}
+    </div>`;
+}
+
+function downloadRecommendations() {
+  const c = clients.find(x => x.id === currentProfileId);
+  if (!c) return;
+  const content = document.getElementById('aiContent').innerHTML;
+  if (!content) { showToast('Generate recommendations first.', 'error'); return; }
+
+  const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
+  const date = new Date().toLocaleDateString();
+
+  const docHtml = `
+    <html><head><meta charset="utf-8">
+    <style>
+      body { font-family: Calibri, Arial, sans-serif; margin: 40px; color: #1e293b; }
+      h1 { color: #0d1b3e; font-size: 20px; border-bottom: 2px solid #c9a84c; padding-bottom: 6px; }
+      h2 { color: #0d1b3e; font-size: 14px; margin-top: 18px; }
+      .summary { background: #f1f5f9; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+      .rec { border-left: 4px solid #c9a84c; padding: 8px 12px; margin-bottom: 12px; }
+      .label { font-weight: bold; }
+      .muted { color: #64748b; font-size: 12px; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+      th { background: #0d1b3e; color: white; padding: 6px 10px; text-align: left; font-size: 12px; }
+      td { padding: 5px 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
+    </style>
+    </head><body>
+    <h1>Financial Planning Recommendations — ${name}</h1>
+    <p class="muted">Prepared by Brady Wells, Northwestern Mutual &nbsp;|&nbsp; ${date}</p>
+    ${content}
+    </body></html>`;
+
+  const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${name.replace(/\s+/g, '_')}_Financial_Plan.doc`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── How I Know Modal ─────────────────────────────────
