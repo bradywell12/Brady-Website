@@ -157,7 +157,7 @@ function renderTable() {
   tbody.innerHTML = filteredClients.map(c => `
     <tr data-id="${c.id}" class="${selectedIds.has(c.id) ? 'selected-row' : ''}">
       <td><input type="checkbox" class="row-check" data-id="${c.id}" ${selectedIds.has(c.id) ? 'checked' : ''} /></td>
-      <td>${escHtml(c.first_name || '')}</td>
+      <td><span class="client-name-link" data-id="${c.id}" title="View financial profile" style="cursor:pointer;color:var(--navy);font-weight:500;text-decoration:underline dotted;text-underline-offset:3px;">${escHtml(c.first_name || '')}</span></td>
       <td>${escHtml(c.last_name  || '')}</td>
       <td class="how-i-know-cell" data-id="${c.id}" data-table="clients" title="Click to edit" style="max-width:160px;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">${c.how_i_know ? escHtml(c.how_i_know.length > 40 ? c.how_i_know.slice(0,40)+'…' : c.how_i_know) : '<span style="color:#d1d5db;font-size:0.8rem">+ add</span>'}</td>
       <td style="white-space:nowrap">
@@ -225,6 +225,9 @@ function renderTable() {
   tbody.querySelectorAll('.action-btn.delete').forEach(btn =>
     btn.addEventListener('click', () => deleteClient(parseInt(btn.dataset.id))));
 
+  tbody.querySelectorAll('.client-name-link').forEach(el =>
+    el.addEventListener('click', () => openClientProfile(parseInt(el.dataset.id))));
+
   tbody.querySelectorAll('.how-i-know-cell').forEach(td =>
     td.addEventListener('click', () => openHowIKnowModal(parseInt(td.dataset.id), 'clients')));
 
@@ -237,6 +240,161 @@ function renderTable() {
       if (c) c.market_type = val;
       e.target.className = 'market-inline-select' + (val ? ' has-value' : '');
     }));
+}
+
+// ─── Client Financial Profile ─────────────────────────
+let currentProfileId = null;
+
+function openClientProfile(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  currentProfileId = id;
+
+  document.getElementById('profileModalName').textContent =
+    `${c.first_name || ''} ${c.last_name || ''} — Financial Profile`.trim();
+
+  const fp = c.financial_profile || {};
+  document.getElementById('fpAge').value        = fp.age        || '';
+  document.getElementById('fpRisk').value       = fp.risk       || '';
+  document.getElementById('fpIncome').value     = fp.income     || '';
+  document.getElementById('fpExpenses').value   = fp.expenses   || '';
+  document.getElementById('fpDebt').value       = fp.debt       || '';
+  document.getElementById('fpAssets').value     = fp.assets     || '';
+  document.getElementById('fpInsurance').value  = fp.insurance  || 'None';
+  document.getElementById('fpRetirement').value = fp.retirement || 'None';
+  document.getElementById('fpDependents').value = fp.dependents !== undefined ? fp.dependents : '';
+  document.getElementById('fpMarital').value    = fp.marital    || '';
+  document.getElementById('fpGoals').value      = fp.goals      || '';
+
+  // Reset AI pane
+  document.getElementById('aiOutput').style.display  = 'none';
+  document.getElementById('aiEmptyState').style.display = 'block';
+  document.getElementById('aiLoading').style.display = 'none';
+  document.getElementById('aiNoDataWarning').style.display =
+    !fp.income && !fp.goals ? 'block' : 'none';
+
+  switchProfileTab('info');
+  document.getElementById('clientProfileModal').style.display = 'flex';
+}
+
+function closeClientProfile() {
+  document.getElementById('clientProfileModal').style.display = 'none';
+  currentProfileId = null;
+}
+
+function switchProfileTab(tab) {
+  const isInfo = tab === 'info';
+  document.getElementById('profilePaneInfo').style.display = isInfo ? 'flex' : 'none';
+  document.getElementById('profilePaneInfo').style.flexDirection = 'column';
+  document.getElementById('profilePaneAI').style.display  = isInfo ? 'none'  : 'block';
+  document.getElementById('profileTabInfo').style.borderBottomColor = isInfo ? 'var(--gold)' : 'transparent';
+  document.getElementById('profileTabInfo').style.color  = isInfo ? 'var(--navy)' : 'var(--text-muted)';
+  document.getElementById('profileTabInfo').style.fontWeight = isInfo ? '600' : '500';
+  document.getElementById('profileTabAI').style.borderBottomColor = isInfo ? 'transparent' : 'var(--gold)';
+  document.getElementById('profileTabAI').style.color   = isInfo ? 'var(--text-muted)' : 'var(--navy)';
+  document.getElementById('profileTabAI').style.fontWeight = isInfo ? '500' : '600';
+}
+
+async function saveFinancialProfile(e) {
+  e.preventDefault();
+  if (!currentProfileId) return;
+  const btn = document.getElementById('saveProfileBtn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  const fp = {
+    age:        parseInt(document.getElementById('fpAge').value)        || null,
+    risk:       document.getElementById('fpRisk').value                 || null,
+    income:     parseFloat(document.getElementById('fpIncome').value)   || null,
+    expenses:   parseFloat(document.getElementById('fpExpenses').value) || null,
+    debt:       parseFloat(document.getElementById('fpDebt').value)     || null,
+    assets:     parseFloat(document.getElementById('fpAssets').value)   || null,
+    insurance:  document.getElementById('fpInsurance').value            || 'None',
+    retirement: document.getElementById('fpRetirement').value           || 'None',
+    dependents: parseInt(document.getElementById('fpDependents').value) || 0,
+    marital:    document.getElementById('fpMarital').value              || null,
+    goals:      document.getElementById('fpGoals').value.trim()         || null,
+  };
+
+  const ok = await updateClientDB(currentProfileId, { financial_profile: fp });
+  if (ok) {
+    const c = clients.find(x => x.id === currentProfileId);
+    if (c) c.financial_profile = fp;
+    showToast('Financial profile saved!', 'success');
+    document.getElementById('aiNoDataWarning').style.display =
+      !fp.income && !fp.goals ? 'block' : 'none';
+  }
+
+  btn.textContent = 'Save Financial Profile'; btn.disabled = false;
+}
+
+async function getAIRecommendations() {
+  if (!currentProfileId) return;
+  const c = clients.find(x => x.id === currentProfileId);
+  if (!c) return;
+
+  if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
+    showToast('Add your Anthropic API key to supabase-config.js first.', 'error');
+    return;
+  }
+
+  const fp = c.financial_profile || {};
+  const fmt = n => n ? '$' + Number(n).toLocaleString() : 'Unknown';
+
+  document.getElementById('aiEmptyState').style.display = 'none';
+  document.getElementById('aiOutput').style.display     = 'none';
+  document.getElementById('aiLoading').style.display    = 'block';
+
+  const prompt = `You are a financial planning assistant helping Brady Wells, a Northwestern Mutual Financial Representative intern, prepare for a client meeting.
+
+Client: ${c.first_name || ''} ${c.last_name || ''}
+Age: ${fp.age || 'Unknown'}
+Marital Status: ${fp.marital || 'Unknown'}
+Dependents: ${fp.dependents !== undefined ? fp.dependents : 'Unknown'}
+Annual Income: ${fmt(fp.income)}
+Monthly Expenses: ${fmt(fp.expenses)}
+Total Debt: ${fmt(fp.debt)}
+Total Assets/Savings: ${fmt(fp.assets)}
+Life Insurance: ${fp.insurance || 'None'}
+Retirement Account: ${fp.retirement || 'None'}
+Risk Tolerance: ${fp.risk || 'Unknown'}
+Financial Goals: ${fp.goals || 'Not specified'}
+
+Based on this client's situation, provide 4-5 specific, actionable recommendations Brady should discuss with them. Focus on gaps and opportunities — where are they exposed, what should they prioritize, and which Northwestern Mutual products or services would be most relevant. Format each recommendation with a bold title followed by a clear explanation. Be specific to their numbers and situation.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API error');
+
+    const text = data.content?.[0]?.text || '';
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('aiOutput').style.display  = 'block';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString();
+    document.getElementById('aiContent').innerHTML = text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br/>')
+      .replace(/^/, '<p>')
+      .replace(/$/, '</p>');
+  } catch (err) {
+    document.getElementById('aiLoading').style.display    = 'none';
+    document.getElementById('aiEmptyState').style.display = 'block';
+    showToast('Error: ' + err.message, 'error');
+  }
 }
 
 // ─── How I Know Modal ─────────────────────────────────

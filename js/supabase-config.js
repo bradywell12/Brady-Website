@@ -21,3 +21,11 @@ const EJS_SERVICE_ID       = 'service_01xwvw5';       // e.g. 'service_abc123'
 const EJS_CONTACT_TEMPLATE = 'template_7j7sep8';   // e.g. 'template_abc123'
 const EJS_OUTREACH_TEMPLATE= 'template_ab5zros';  // e.g. 'template_xyz456'
 const EJS_PUBLIC_KEY       = '-_wPZUI9pKJkHXqvL';       // e.g. 'user_AbCdEfGh'
+
+/* =====================================================
+   Anthropic (Claude) API Key
+   -----------------------------------------------------
+   1. Go to console.anthropic.com → API Keys
+   2. Create a new key and paste it below
+   ===================================================== */
+const ANTHROPIC_API_KEY = 'YOUR_ANTHROPIC_API_KEY_HERE';
