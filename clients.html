@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Client Portal | Financial.Planning</title>
-  <link rel="stylesheet" href="css/style.css?v=5" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
 </head>
@@ -671,6 +671,26 @@ Financial Representative | Northwestern Mutual</textarea>
     </div>
   </div>
 
+  <!-- ===================== HOW I KNOW MODAL ===================== -->
+  <div class="modal-overlay" id="howIKnowModal" style="display:none;" onclick="if(event.target===this)closeHowIKnowModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="howIKnowModalTitle">How I Know Them</h2>
+        <button class="modal-close" onclick="closeHowIKnowModal()">&times;</button>
+      </div>
+      <div style="padding:1.25rem 1.75rem 0;">
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="howIKnowText" class="form-input" rows="3" placeholder="e.g. College friend, referral from Jane, met at networking event..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeHowIKnowModal()">Cancel</button>
+        <button type="button" class="btn-primary" id="saveHowIKnowBtn" onclick="saveHowIKnow()">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===================== CALL OUTCOME MODAL ===================== -->
   <div class="modal-overlay" id="callModal" style="display:none;">
     <div class="modal">
@@ -709,8 +729,8 @@ Financial Representative | Northwestern Mutual</textarea>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script src="js/supabase-config.js?v=5"></script>
-  <script src="js/clients.js?v=5"></script>
+  <script src="js/supabase-config.js?v=6"></script>
+  <script src="js/clients.js?v=6"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');

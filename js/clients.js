@@ -159,7 +159,7 @@ function renderTable() {
       <td><input type="checkbox" class="row-check" data-id="${c.id}" ${selectedIds.has(c.id) ? 'checked' : ''} /></td>
       <td>${escHtml(c.first_name || '')}</td>
       <td>${escHtml(c.last_name  || '')}</td>
-      <td style="max-width:160px;font-size:0.82rem;color:var(--text-muted);">${c.how_i_know ? escHtml(c.how_i_know.length > 40 ? c.how_i_know.slice(0,40)+'…' : c.how_i_know) : '<span style="color:#d1d5db">—</span>'}</td>
+      <td class="how-i-know-cell" data-id="${c.id}" data-table="clients" title="Click to edit" style="max-width:160px;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">${c.how_i_know ? escHtml(c.how_i_know.length > 40 ? c.how_i_know.slice(0,40)+'…' : c.how_i_know) : '<span style="color:#d1d5db;font-size:0.8rem">+ add</span>'}</td>
       <td style="white-space:nowrap">
         ${c.phone
           ? `<a href="tel:${escHtml(c.phone)}" style="color:var(--text)">${escHtml(c.phone)}</a>`
@@ -225,6 +225,9 @@ function renderTable() {
   tbody.querySelectorAll('.action-btn.delete').forEach(btn =>
     btn.addEventListener('click', () => deleteClient(parseInt(btn.dataset.id))));
 
+  tbody.querySelectorAll('.how-i-know-cell').forEach(td =>
+    td.addEventListener('click', () => openHowIKnowModal(parseInt(td.dataset.id), 'clients')));
+
   tbody.querySelectorAll('.market-inline-select').forEach(sel =>
     sel.addEventListener('change', async e => {
       const id = parseInt(e.target.dataset.id);
@@ -234,6 +237,60 @@ function renderTable() {
       if (c) c.market_type = val;
       e.target.className = 'market-inline-select' + (val ? ' has-value' : '');
     }));
+}
+
+// ─── How I Know Modal ─────────────────────────────────
+let _hikId = null;
+let _hikTable = null;
+
+function openHowIKnowModal(id, table) {
+  _hikId = id;
+  _hikTable = table;
+  const c = table === 'linkedin'
+    ? linkedinContacts.find(x => x.id === id)
+    : clients.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('howIKnowModalTitle').textContent =
+    `How I Know — ${c.first_name || ''} ${c.last_name || ''}`.trim();
+  document.getElementById('howIKnowText').value = c.how_i_know || '';
+  document.getElementById('howIKnowModal').style.display = 'flex';
+  document.getElementById('howIKnowText').focus();
+}
+
+function closeHowIKnowModal() {
+  document.getElementById('howIKnowModal').style.display = 'none';
+  _hikId = null;
+  _hikTable = null;
+}
+
+async function saveHowIKnow() {
+  if (!_hikId || !_hikTable) return;
+  const val = document.getElementById('howIKnowText').value.trim() || null;
+  const btn = document.getElementById('saveHowIKnowBtn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  if (_hikTable === 'clients') {
+    const ok = await updateClientDB(_hikId, { how_i_know: val });
+    if (ok) {
+      const c = clients.find(x => x.id === _hikId);
+      if (c) c.how_i_know = val;
+      applyFiltersAndRender();
+      showToast('Saved!', 'success');
+    }
+  } else {
+    const { error } = await db.from('linkedin_contacts').update({ how_i_know: val }).eq('id', _hikId);
+    if (!error) {
+      const c = linkedinContacts.find(x => x.id === _hikId);
+      if (c) c.how_i_know = val;
+      renderLinkedInTable();
+      showToast('Saved!', 'success');
+    } else {
+      showToast('Error saving: ' + error.message, 'error');
+    }
+  }
+
+  btn.textContent = 'Save'; btn.disabled = false;
+  closeHowIKnowModal();
 }
 
 function renderStats(tab = 'clients') {
@@ -1634,7 +1691,7 @@ function renderLinkedInTable() {
     <tr>
       <td>${escHtml(c.first_name || '')}</td>
       <td>${escHtml(c.last_name  || '')}</td>
-      <td style="max-width:160px;font-size:0.82rem;color:var(--text-muted);">${c.how_i_know ? escHtml(c.how_i_know.length > 40 ? c.how_i_know.slice(0,40)+'…' : c.how_i_know) : '<span style="color:#d1d5db">—</span>'}</td>
+      <td class="how-i-know-cell" data-id="${c.id}" data-table="linkedin" title="Click to edit" style="max-width:160px;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">${c.how_i_know ? escHtml(c.how_i_know.length > 40 ? c.how_i_know.slice(0,40)+'…' : c.how_i_know) : '<span style="color:#d1d5db;font-size:0.8rem">+ add</span>'}</td>
       <td>${c.email
         ? `<a href="mailto:${escHtml(c.email)}" style="color:var(--accent)">${escHtml(c.email)}</a>`
         : '<span style="color:#9ca3af">—</span>'}</td>
@@ -1651,6 +1708,9 @@ function renderLinkedInTable() {
         <button class="action-btn delete" title="Delete" data-lid="${c.id}">&#128465;</button>
       </td>
     </tr>`).join('');
+
+  tbody.querySelectorAll('.how-i-know-cell').forEach(td =>
+    td.addEventListener('click', () => openHowIKnowModal(parseInt(td.dataset.id), 'linkedin')));
 
   tbody.querySelectorAll('.action-btn.edit').forEach(btn =>
     btn.addEventListener('click', () => {
