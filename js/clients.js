@@ -351,13 +351,6 @@ async function getAIRecommendations() {
   const c = clients.find(x => x.id === currentProfileId);
   if (!c) return;
 
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
-    document.getElementById('apiKeyInput').value = '';
-    document.getElementById('apiKeyModal').style.display = 'flex';
-    return;
-  }
-
   const fp = c.financial_profile || {};
   const fmt = n => n ? '$' + Number(n).toLocaleString() : 'Unknown';
 
@@ -383,32 +376,16 @@ Financial Goals: ${fp.goals || 'Not specified'}
 Based on this client's situation, provide 4-5 specific, actionable recommendations Brady should discuss with them. Focus on gaps and opportunities — where are they exposed, what should they prioritize, and which Northwestern Mutual products or services would be most relevant. Format each recommendation with a bold title followed by a clear explanation. Be specific to their numbers and situation.`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/claude-recommend', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-allow-browser': 'true',
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
       },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1200,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+      body: JSON.stringify({ prompt }),
     });
 
     const data = await res.json();
-
-    if (res.status === 401) {
-      localStorage.removeItem('anthropic_api_key');
-      document.getElementById('aiLoading').style.display    = 'none';
-      document.getElementById('aiEmptyState').style.display = 'block';
-      showToast('API key invalid or expired. Please enter a new one.', 'error');
-      document.getElementById('apiKeyInput').value = '';
-      document.getElementById('apiKeyModal').style.display = 'flex';
-      return;
-    }
 
     if (!res.ok) throw new Error(data.error?.message || 'API error ' + res.status);
 
