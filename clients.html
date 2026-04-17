@@ -814,6 +814,7 @@ Financial Representative | Northwestern Mutual</textarea>
         <div id="aiEmptyState" style="text-align:center;padding:1rem 0 1.5rem;">
           <p style="color:var(--text-muted);font-size:0.95rem;margin-bottom:1.25rem;">Claude will analyze this client's financial situation and give you personalized recommendations to guide your conversation.</p>
           <button class="btn-primary" id="getRecsBtn" onclick="getAIRecommendations()">&#10024; Get Recommendations</button>
+          <button class="btn-outline" style="margin-left:0.5rem;font-size:0.82rem;" onclick="loadTestRecommendations()">&#128203; Load Test Data</button>
           <p id="aiNoDataWarning" style="display:none;color:#b45309;font-size:0.83rem;margin-top:0.75rem;">&#9888; Save some financial info first for better recommendations.</p>
         </div>
         <div id="aiOutput" style="display:none;">
@@ -895,7 +896,7 @@ Financial Representative | Northwestern Mutual</textarea>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/supabase-config.js?v=9"></script>
-  <script src="js/clients.js?v=12"></script>
+  <script src="js/clients.js?v=13"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');

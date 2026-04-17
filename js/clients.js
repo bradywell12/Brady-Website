@@ -418,14 +418,7 @@ Use real numbers based on their income/expenses. allocation values are percentag
     if (!res.ok) throw new Error(data.error?.message || 'API error ' + res.status);
 
     const text = data.content?.[0]?.text || '';
-    let ai;
-    try {
-      // Strip markdown code fences Claude sometimes wraps JSON in
-      const cleaned = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-      ai = JSON.parse(cleaned);
-    } catch {
-      ai = null;
-    }
+    const ai = parseAIResponse(text);
     lastAIResult = ai;
 
     document.getElementById('aiLoading').style.display = 'none';
@@ -437,6 +430,78 @@ Use real numbers based on their income/expenses. allocation values are percentag
     document.getElementById('aiEmptyState').style.display = 'block';
     showToast('Error: ' + err.message, 'error');
   }
+}
+
+function parseAIResponse(text) {
+  try {
+    // Remove any markdown fences and leading non-JSON characters
+    const cleaned = text
+      .replace(/^[\s\S]*?(?=\{)/, '')  // strip everything before first {
+      .replace(/\}[\s\S]*$/, '}')       // strip everything after last }
+      .trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return null;
+  }
+}
+
+const SAMPLE_AI = {
+  summary: "This client has a solid income foundation but is under-protected with no life insurance and minimal retirement savings. Their high debt-to-income ratio is limiting their ability to save and invest. Addressing insurance gaps and accelerating debt payoff should be the immediate priorities.",
+  snapshot: [
+    { label: "Monthly Income", value: "$4,167" },
+    { label: "Monthly Surplus", value: "$667" },
+    { label: "Debt-to-Income", value: "42%" },
+    { label: "Savings Rate", value: "6%" }
+  ],
+  allocation: [
+    { label: "Living Expenses", current: 42, recommended: 35 },
+    { label: "Debt Payments", current: 28, recommended: 18 },
+    { label: "Emergency Fund", current: 2, recommended: 10 },
+    { label: "Retirement", current: 4, recommended: 15 },
+    { label: "Investments", current: 0, recommended: 10 }
+  ],
+  recommendations: [
+    {
+      title: "Build a 3-6 Month Emergency Fund",
+      priority: "High",
+      why: "With only $4,000 in savings against $20,000 in debt and $3,500/month in expenses, one unexpected event could force high-interest borrowing or derail financial goals.",
+      action: "Set aside $330-500/month into a dedicated savings account until reaching $10,500-$21,000.",
+      timeline: "12-18 months",
+      product: ""
+    },
+    {
+      title: "Obtain Term Life Insurance",
+      priority: "High",
+      why: "No current coverage leaves dependents financially exposed. At age 22, term life insurance rates are at their lowest.",
+      action: "Apply for a 20-year term policy with $500,000 in coverage.",
+      timeline: "Immediately",
+      product: "Northwestern Mutual Term Life Insurance"
+    },
+    {
+      title: "Accelerate Debt Payoff",
+      priority: "Medium",
+      why: "A 42% debt-to-income ratio is above the recommended 36% threshold and limits borrowing capacity for a future home purchase.",
+      action: "Apply the debt avalanche method — pay minimums on all debts, direct extra funds to highest-interest debt first.",
+      timeline: "24-36 months",
+      product: ""
+    },
+    {
+      title: "Open and Max Roth IRA",
+      priority: "Medium",
+      why: "At age 22 in a lower tax bracket, a Roth IRA offers tax-free growth for decades. Starting now vs. at 32 could mean $200,000+ more at retirement.",
+      action: "Contribute $500/month to a Roth IRA once emergency fund reaches 3 months.",
+      timeline: "Start within 6 months",
+      product: "Northwestern Mutual Investment Services"
+    }
+  ]
+};
+
+function loadTestRecommendations() {
+  lastAIResult = SAMPLE_AI;
+  document.getElementById('aiEmptyState').style.display = 'none';
+  document.getElementById('aiOutput').style.display  = 'block';
+  document.getElementById('aiTimestamp').textContent = 'Sample data — no API call made';
+  document.getElementById('aiContent').innerHTML = renderAIOutput(SAMPLE_AI);
 }
 
 function renderAIOutput(ai) {
