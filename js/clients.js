@@ -376,7 +376,7 @@ Financial Goals: ${fp.goals || 'Not specified'}
 
 Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
 {
-  "summary": "2-3 sentence overview of their financial situation",
+  "summary": "2-3 sentence overview of their financial situation using their actual numbers",
   "snapshot": [
     {"label": "Monthly Income", "value": "$X,XXX"},
     {"label": "Monthly Surplus", "value": "$X,XXX"},
@@ -394,15 +394,15 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
     {
       "title": "...",
       "priority": "High",
-      "why": "...",
-      "action": "...",
+      "why": "Specific explanation referencing their actual numbers (income, debt, age, etc.)",
+      "action": "Concrete, specific action — include exact dollar amounts, specific policy types (e.g. 20-year $500,000 Term Life vs Whole Life and why), specific account types, specific monthly contribution amounts based on their income",
       "timeline": "...",
-      "product": "Northwestern Mutual product or service if relevant, else empty string"
+      "product": "Specific Northwestern Mutual product name and type — e.g. 'Northwestern Mutual 20-Year Term Life Insurance' or 'Northwestern Mutual Whole Life Policy' — explain briefly why this specific product fits their situation. Empty string if not applicable."
     }
   ],
-  "conclusion": "2-3 sentence 'What To Do Now' paragraph — the single most important next step Brady should discuss with this client at their meeting, written as a clear action plan."
+  "conclusion": "3-4 sentence 'What To Do Now' — the clearest next steps Brady should walk through with this client at the meeting. Reference specific products, dollar amounts, and timelines. Make it feel like a confident, personalized action plan."
 }
-Use real numbers based on their income/expenses. allocation values are percentages of monthly income (current vs recommended). Include 4-5 recommendations. Priority must be High, Medium, or Low.`;
+Use real numbers throughout. Allocation values are % of monthly income. Include 4-5 recommendations. Priority must be High, Medium, or Low. Be specific — generic advice is not helpful. Reference their actual income, debt, age, and goals in every recommendation.`;
 
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/claude-recommend', {
@@ -507,64 +507,66 @@ function loadTestRecommendations() {
 }
 
 function renderAIOutput(ai) {
-  const priorityColor = { High: '#dc2626', Medium: '#d97706', Low: '#16a34a' };
+  const priorityColor = { High: '#b91c1c', Medium: '#b45309', Low: '#15803d' };
+  const priorityBg    = { High: '#fef2f2', Medium: '#fffbeb', Low: '#f0fdf4' };
 
-  // Snapshot cards
   const snapshotHTML = (ai.snapshot || []).map(s => `
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem 1rem;text-align:center;flex:1;min-width:100px;">
-      <div style="font-size:1.1rem;font-weight:700;color:var(--navy);">${escHtml(s.value)}</div>
-      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${escHtml(s.label)}</div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-top:3px solid var(--navy);padding:0.75rem 1rem;text-align:center;flex:1;min-width:100px;">
+      <div style="font-size:1.15rem;font-weight:700;color:var(--navy);letter-spacing:-0.02em;">${escHtml(s.value)}</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.04em;">${escHtml(s.label)}</div>
     </div>`).join('');
 
-  // Allocation bars
   const allocationHTML = (ai.allocation || []).map(a => `
-    <div style="margin-bottom:0.9rem;">
-      <div style="display:flex;justify-content:space-between;font-size:0.83rem;margin-bottom:4px;">
-        <span style="font-weight:500;">${escHtml(a.label)}</span>
-        <span style="color:var(--text-muted);">Current <strong style="color:var(--navy)">${a.current}%</strong> → Recommended <strong style="color:#16a34a">${a.recommended}%</strong></span>
+    <div style="margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;margin-bottom:5px;">
+        <span style="font-weight:600;color:#334155;">${escHtml(a.label)}</span>
+        <span style="color:var(--text-muted);font-size:0.78rem;">
+          Current: <strong style="color:#64748b;">${a.current}%</strong>
+          &nbsp;&rarr;&nbsp;
+          Recommended: <strong style="color:#15803d;">${a.recommended}%</strong>
+        </span>
       </div>
-      <div style="background:#f1f5f9;border-radius:99px;height:10px;overflow:hidden;position:relative;">
-        <div style="position:absolute;left:0;top:0;height:100%;width:${Math.min(a.current,100)}%;background:#94a3b8;border-radius:99px;"></div>
-        <div style="position:absolute;left:0;top:0;height:100%;width:${Math.min(a.recommended,100)}%;background:var(--gold);opacity:0.5;border-radius:99px;"></div>
+      <div style="background:#f1f5f9;height:8px;position:relative;border-radius:2px;overflow:hidden;">
+        <div style="position:absolute;left:0;top:0;height:100%;width:${Math.min(a.current,100)}%;background:#94a3b8;"></div>
+        <div style="position:absolute;left:0;top:0;height:100%;width:${Math.min(a.recommended,100)}%;background:var(--gold);opacity:0.6;"></div>
       </div>
     </div>`).join('');
 
-  // Recommendation cards
   const recsHTML = (ai.recommendations || []).map((r, i) => `
-    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.85rem;border-left:4px solid ${priorityColor[r.priority] || '#94a3b8'};">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
-        <strong style="font-size:0.95rem;color:var(--navy);">${i+1}. ${escHtml(r.title)}</strong>
-        <span style="font-size:0.72rem;font-weight:600;padding:2px 8px;border-radius:99px;background:${priorityColor[r.priority]}18;color:${priorityColor[r.priority] || '#64748b'};white-space:nowrap;margin-left:0.5rem;">${escHtml(r.priority)} Priority</span>
+    <div style="border:1px solid #e2e8f0;border-left:4px solid ${priorityColor[r.priority] || '#94a3b8'};padding:1rem 1.25rem;margin-bottom:0.85rem;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.6rem;">
+        <span style="font-size:0.95rem;font-weight:700;color:var(--navy);">${i+1}. ${escHtml(r.title)}</span>
+        <span style="font-size:0.7rem;font-weight:700;padding:3px 10px;background:${priorityBg[r.priority] || '#f8fafc'};color:${priorityColor[r.priority] || '#64748b'};text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;margin-left:0.75rem;">${escHtml(r.priority)}</span>
       </div>
-      <p style="font-size:0.85rem;color:var(--text-muted);margin:0 0 0.5rem;">${escHtml(r.why)}</p>
-      <div style="font-size:0.83rem;margin-bottom:0.3rem;"><strong>Action:</strong> ${escHtml(r.action)}</div>
-      <div style="display:flex;gap:1rem;font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem;">
-        <span>&#128337; ${escHtml(r.timeline)}</span>
-        ${r.product ? `<span style="color:#0d6efd;">&#9733; ${escHtml(r.product)}</span>` : ''}
+      <p style="font-size:0.83rem;color:#475569;margin:0 0 0.6rem;line-height:1.6;">${escHtml(r.why)}</p>
+      <div style="font-size:0.83rem;color:#1e293b;margin-bottom:0.5rem;line-height:1.55;"><span style="font-weight:600;color:var(--navy);">Recommended Action:</span> ${escHtml(r.action)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:1.5rem;font-size:0.78rem;color:#64748b;border-top:1px solid #f1f5f9;padding-top:0.5rem;margin-top:0.4rem;">
+        <span><strong style="color:#334155;">Timeline:</strong> ${escHtml(r.timeline)}</span>
+        ${r.product ? `<span><strong style="color:#334155;">Product:</strong> ${escHtml(r.product)}</span>` : ''}
       </div>
     </div>`).join('');
 
   return `
-    <div style="font-size:0.9rem;">
-      <div style="background:linear-gradient(135deg,var(--navy),#1e40af);color:#fff;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem;">
-        <div style="font-size:0.75rem;font-weight:600;opacity:0.7;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:.05em;">Financial Summary</div>
-        <p style="margin:0;line-height:1.6;opacity:0.95;">${escHtml(ai.summary || '')}</p>
+    <div style="font-size:0.88rem;">
+      <div style="background:var(--navy);color:#fff;padding:1rem 1.25rem;margin-bottom:1.25rem;">
+        <div style="font-size:0.68rem;font-weight:700;opacity:0.6;margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:.08em;">Financial Overview</div>
+        <p style="margin:0;line-height:1.65;font-size:0.88rem;">${escHtml(ai.summary || '')}</p>
       </div>
-      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.25rem;">${snapshotHTML}</div>
-      <div style="margin-bottom:1.25rem;">
-        <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:0.75rem;">Income Allocation — Current vs Recommended</div>
-        <div style="display:flex;gap:1rem;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.6rem;">
-          <span><span style="display:inline-block;width:12px;height:8px;background:#94a3b8;border-radius:2px;margin-right:4px;"></span>Current</span>
-          <span><span style="display:inline-block;width:12px;height:8px;background:var(--gold);opacity:0.6;border-radius:2px;margin-right:4px;"></span>Recommended</span>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.5rem;">${snapshotHTML}</div>
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:0.85rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.4rem;">Income Allocation — Current vs. Recommended</div>
+        <div style="display:flex;gap:1.25rem;font-size:0.75rem;color:#94a3b8;margin-bottom:0.85rem;">
+          <span><span style="display:inline-block;width:10px;height:8px;background:#94a3b8;margin-right:5px;vertical-align:middle;"></span>Current</span>
+          <span><span style="display:inline-block;width:10px;height:8px;background:var(--gold);opacity:0.7;margin-right:5px;vertical-align:middle;"></span>Recommended</span>
         </div>
         ${allocationHTML}
       </div>
-      <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:0.75rem;">Recommendations</div>
+      <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:0.85rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.4rem;">Recommendations</div>
       ${recsHTML}
       ${ai.conclusion ? `
-      <div style="background:linear-gradient(135deg,#064e3b,#065f46);color:#fff;border-radius:10px;padding:1rem 1.25rem;margin-top:0.5rem;">
-        <div style="font-size:0.75rem;font-weight:700;opacity:0.7;margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:.05em;">&#9989; What To Do Now</div>
-        <p style="margin:0;line-height:1.65;opacity:0.95;font-size:0.9rem;">${escHtml(ai.conclusion)}</p>
+      <div style="background:var(--navy);color:#fff;padding:1.1rem 1.25rem;margin-top:0.75rem;">
+        <div style="font-size:0.68rem;font-weight:700;opacity:0.6;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:.08em;">Next Steps</div>
+        <p style="margin:0;line-height:1.7;font-size:0.88rem;">${escHtml(ai.conclusion)}</p>
       </div>` : ''}
     </div>`;
 }
