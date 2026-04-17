@@ -244,6 +244,7 @@ function renderTable() {
 
 // ─── Client Financial Profile ─────────────────────────
 let currentProfileId = null;
+let lastAIResult = null;
 
 function openClientProfile(id) {
   const c = clients.find(x => x.id === id);
@@ -419,11 +420,13 @@ Use real numbers based on their income/expenses. allocation values are percentag
     const text = data.content?.[0]?.text || '';
     let ai;
     try {
-      ai = JSON.parse(text);
+      // Strip markdown code fences Claude sometimes wraps JSON in
+      const cleaned = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+      ai = JSON.parse(cleaned);
     } catch {
-      // fallback plain render if JSON parse fails
       ai = null;
     }
+    lastAIResult = ai;
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
@@ -496,38 +499,109 @@ function renderAIOutput(ai) {
 
 function downloadRecommendations() {
   const c = clients.find(x => x.id === currentProfileId);
-  if (!c) return;
-  const content = document.getElementById('aiContent').innerHTML;
-  if (!content) { showToast('Generate recommendations first.', 'error'); return; }
-
+  if (!c || !lastAIResult) { showToast('Generate recommendations first.', 'error'); return; }
+  const ai = lastAIResult;
+  const fp = c.financial_profile || {};
   const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
   const date = new Date().toLocaleDateString();
+  const priorityColor = { High: '#c0392b', Medium: '#d97706', Low: '#16a34a' };
 
-  const docHtml = `
-    <html><head><meta charset="utf-8">
-    <style>
-      body { font-family: Calibri, Arial, sans-serif; margin: 40px; color: #1e293b; }
-      h1 { color: #0d1b3e; font-size: 20px; border-bottom: 2px solid #c9a84c; padding-bottom: 6px; }
-      h2 { color: #0d1b3e; font-size: 14px; margin-top: 18px; }
-      .summary { background: #f1f5f9; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
-      .rec { border-left: 4px solid #c9a84c; padding: 8px 12px; margin-bottom: 12px; }
-      .label { font-weight: bold; }
-      .muted { color: #64748b; font-size: 12px; }
-      table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-      th { background: #0d1b3e; color: white; padding: 6px 10px; text-align: left; font-size: 12px; }
-      td { padding: 5px 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
-    </style>
-    </head><body>
-    <h1>Financial Planning Recommendations — ${name}</h1>
-    <p class="muted">Prepared by Brady Wells, Northwestern Mutual &nbsp;|&nbsp; ${date}</p>
-    ${content}
-    </body></html>`;
+  const snapshotRows = (ai.snapshot || []).map(s =>
+    `<td style="width:25%;padding:10px;text-align:center;border:1px solid #ddd;">
+       <div style="font-size:18px;font-weight:bold;color:#0d1b3e;">${s.value}</div>
+       <div style="font-size:10px;color:#64748b;margin-top:3px;">${s.label}</div>
+     </td>`).join('');
+
+  const allocationRows = (ai.allocation || []).map(a => {
+    const bar = (pct, color) => `<div style="display:inline-block;width:${Math.min(pct,100)*2}px;height:12px;background:${color};border-radius:3px;vertical-align:middle;"></div> ${pct}%`;
+    return `<tr>
+      <td style="padding:6px 10px;border:1px solid #ddd;font-weight:500;">${a.label}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;">${bar(a.current, '#94a3b8')}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;">${bar(a.recommended, '#c9a84c')}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;color:${a.recommended > a.current ? '#16a34a' : '#dc2626'};font-weight:600;">
+        ${a.recommended > a.current ? '▲' : a.recommended < a.current ? '▼' : '—'} ${Math.abs(a.recommended - a.current)}%
+      </td>
+    </tr>`;
+  }).join('');
+
+  const recSections = (ai.recommendations || []).map((r, i) => `
+    <div style="margin-bottom:18px;border-left:5px solid ${priorityColor[r.priority] || '#94a3b8'};padding:12px 16px;background:#fafafa;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:14px;font-weight:bold;color:#0d1b3e;">${i+1}. ${r.title}</span>
+        <span style="font-size:11px;font-weight:600;color:${priorityColor[r.priority] || '#64748b'};">${r.priority} Priority</span>
+      </div>
+      <p style="margin:0 0 6px;font-size:12px;color:#475569;">${r.why}</p>
+      <p style="margin:0 0 4px;font-size:12px;"><strong>Action:</strong> ${r.action}</p>
+      <p style="margin:0;font-size:11px;color:#64748b;">Timeline: ${r.timeline}${r.product ? ' &nbsp;|&nbsp; Product: ' + r.product : ''}</p>
+    </div>`).join('');
+
+  const clientInfo = [
+    fp.age ? `Age: ${fp.age}` : null,
+    fp.marital ? `Marital Status: ${fp.marital}` : null,
+    fp.dependents !== undefined ? `Dependents: ${fp.dependents}` : null,
+    fp.income ? `Annual Income: $${Number(fp.income).toLocaleString()}` : null,
+    fp.debt ? `Total Debt: $${Number(fp.debt).toLocaleString()}` : null,
+    fp.assets ? `Total Assets: $${Number(fp.assets).toLocaleString()}` : null,
+    fp.insurance ? `Life Insurance: ${fp.insurance}` : null,
+    fp.retirement ? `Retirement Account: ${fp.retirement}` : null,
+    fp.risk ? `Risk Tolerance: ${fp.risk}` : null,
+  ].filter(Boolean).join('&nbsp;&nbsp;|&nbsp;&nbsp;');
+
+  const docHtml = `<html><head><meta charset="utf-8">
+  <style>
+    body { font-family: Calibri, Arial, sans-serif; margin: 0; color: #1e293b; font-size: 12px; }
+    .header { background: #0d1b3e; color: white; padding: 24px 32px; }
+    .header h1 { margin: 0 0 4px; font-size: 22px; }
+    .header p { margin: 0; opacity: 0.75; font-size: 11px; }
+    .body { padding: 24px 32px; }
+    .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: #0d1b3e; border-bottom: 2px solid #c9a84c;
+      padding-bottom: 4px; margin: 20px 0 12px; }
+    .summary-box { background: #f1f5f9; border-left: 4px solid #0d1b3e; padding: 12px 16px; margin-bottom: 16px; line-height: 1.6; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+    th { background: #0d1b3e; color: white; padding: 8px 10px; text-align: left; font-size: 11px; }
+    .footer { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 32px; font-size: 10px; color: #94a3b8; }
+  </style>
+  </head><body>
+  <div class="header">
+    <h1>Financial Planning Report</h1>
+    <p>${name} &nbsp;|&nbsp; Prepared by Brady Wells, Northwestern Mutual &nbsp;|&nbsp; ${date}</p>
+  </div>
+  <div class="body">
+    <div class="section-title">Client Overview</div>
+    <p style="color:#475569;font-size:11px;margin:0 0 12px;">${clientInfo}</p>
+    ${fp.goals ? `<p style="margin:0 0 16px;"><strong>Goals:</strong> ${fp.goals}</p>` : ''}
+
+    <div class="section-title">Financial Summary</div>
+    <div class="summary-box">${ai.summary || ''}</div>
+
+    <div class="section-title">Key Metrics</div>
+    <table><tr>${snapshotRows}</tr></table>
+
+    <div class="section-title">Recommended Income Allocation</div>
+    <table>
+      <tr>
+        <th style="width:35%;">Category</th>
+        <th style="width:25%;">Current %</th>
+        <th style="width:25%;">Recommended %</th>
+        <th style="width:15%;">Change</th>
+      </tr>
+      ${allocationRows}
+    </table>
+
+    <div class="section-title">Recommendations</div>
+    ${recSections}
+  </div>
+  <div class="footer">
+    This report was prepared by Brady Wells, Financial Representative Intern at Northwestern Mutual. For informational purposes only. &copy; ${new Date().getFullYear()} Northwestern Mutual.
+  </div>
+  </body></html>`;
 
   const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${name.replace(/\s+/g, '_')}_Financial_Plan.doc`;
+  a.download = `${name.replace(/\s+/g, '_')}_Financial_Plan_${date.replace(/\//g,'-')}.doc`;
   a.click();
   URL.revokeObjectURL(url);
 }
