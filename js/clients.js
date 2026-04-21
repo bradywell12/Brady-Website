@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v32)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v33)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -788,9 +788,9 @@ function downloadRecommendations() {
   let chartImgSrc = null;
   if (chartCanvas) {
     const printCanvas = document.createElement('canvas');
-    printCanvas.width  = 660;
-    printCanvas.height = 260;
-    printCanvas.getContext('2d').drawImage(chartCanvas, 0, 0, 660, 260);
+    printCanvas.width  = 720;
+    printCanvas.height = 270;
+    printCanvas.getContext('2d').drawImage(chartCanvas, 0, 0, 720, 270);
     chartImgSrc = printCanvas.toDataURL('image/png');
   }
 
@@ -878,7 +878,7 @@ function downloadRecommendations() {
 
     <h2>Growth Projection — ${focus.type}</h2>
     <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
-    ${chartImgSrc ? `<img src="${chartImgSrc}" />` : ''}
+    ${chartImgSrc ? `<img src="${chartImgSrc}" width="100%" style="width:100%;display:block;" />` : ''}
     <table>
       <tr>
         <th>Age</th><th>Years Invested</th><th>Start Now</th><th>Wait 5 Years</th><th>Cost of Waiting</th>
