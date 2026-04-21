@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v27)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v28)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -595,6 +595,13 @@ const SAMPLE_AI = {
 
 function loadTestRecommendations() {
   lastAIResult = SAMPLE_AI;
+  // Populate invest fields with realistic test values if empty
+  if (!document.getElementById('investMonthly').value) {
+    document.getElementById('investMonthly').value = '417';
+  }
+  if (!document.getElementById('investGoalAge').value) {
+    document.getElementById('investGoalAge').value = '65';
+  }
   document.getElementById('aiEmptyState').style.display = 'none';
   document.getElementById('aiOutput').style.display  = 'block';
   document.getElementById('aiTimestamp').textContent = 'Sample data — no API call made';
@@ -824,7 +831,7 @@ function downloadRecommendations() {
   const docHtml = `<html><head><meta charset="utf-8">
   <style>
     body { font-family: "Times New Roman", Times, serif; margin: 0; color: #111; font-size: 12pt; }
-    .page { padding: 1in 1in 0.75in 1in; }
+    .page { padding: 0.6in 0.65in 0.6in 0.65in; }
     h1 { font-size: 20pt; margin: 0 0 4px; font-weight: bold; }
     .subtitle { font-size: 11pt; color: #444; margin: 0 0 24px; }
     h2 { font-size: 13pt; font-weight: bold; margin: 24px 0 6px; border-bottom: 1px solid #000; padding-bottom: 3px; }
@@ -866,7 +873,7 @@ function downloadRecommendations() {
 
     <h2>Growth Projection — ${focus.type}</h2>
     <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
-    ${chartImgSrc ? `<img src="${chartImgSrc}" style="width:100%;margin-bottom:14px;display:block;" />` : ''}
+    ${chartImgSrc ? `<img src="${chartImgSrc}" width="100%" style="display:block;margin-bottom:14px;max-width:100%;" />` : ''}
     <table>
       <tr>
         <th>Age</th><th>Years Invested</th><th>Start Now</th><th>Wait 5 Years</th><th>Cost of Waiting</th>
