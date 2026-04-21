@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v38)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v39)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -793,7 +793,7 @@ function downloadRecommendations() {
   const allocationRows = (ai.allocation || []).map(a => {
     const change = a.recommended - a.current;
     const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '—';
-    return `<tr style="page-break-inside:avoid;mso-keep-together:yes;">
+    return `<tr>
       <td style="padding:7px 12px;border:1px solid #ccc;">${a.label}</td>
       <td style="padding:7px 12px;border:1px solid #ccc;text-align:center;">${a.current}%</td>
       <td style="padding:7px 12px;border:1px solid #ccc;text-align:center;">${a.recommended}%</td>
@@ -824,19 +824,17 @@ function downloadRecommendations() {
   const docHtml = `<html><head><meta charset="utf-8">
   <style>
     @page { margin: 1in 0.75in; }
-    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0; color: #111; font-size: 12pt; mso-margin-top-alt:auto; mso-margin-bottom-alt:auto; }
+    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0; color: #111; font-size: 12pt; }
     h1 { font-size: 20pt; margin: 0 0 6pt; font-weight: bold; }
-    .subtitle { font-size: 12pt; color: #444; margin: 0 0 18pt; }
-    h2 { font-size: 13pt; font-weight: bold; margin: 18pt 0 8pt; border-bottom: 1px solid #000; padding-bottom: 3pt; }
-    p { margin: 0 0 12pt; line-height: 1.7; font-size: 12pt; }
-    .rec { margin-bottom: 18pt; padding-bottom: 14pt; border-bottom: 1px solid #ddd; }
-    .rec p { margin: 0 0 6pt; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 18pt; font-size: 12pt; page-break-inside: avoid; }
-    h2 + table, h2 + p + table { page-break-before: avoid; }
-    th { border: 1px solid #888; padding: 7pt 10pt; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; }
-    td { border: 1px solid #aaa; padding: 7pt 10pt; font-size: 12pt; }
-    img { display: block; width: 100%; height: auto; margin-bottom: 14pt; }
-    .footer { margin-top: 24pt; padding-top: 10pt; border-top: 1px solid #aaa; font-size: 12pt; color: #555; }
+    .subtitle { font-size: 12pt; color: #444; margin: 0 0 14pt; }
+    h2 { font-size: 13pt; font-weight: bold; margin: 14pt 0 6pt; border-bottom: 1px solid #000; padding-bottom: 3pt; }
+    p { margin: 0 0 10pt; line-height: 1.6; font-size: 12pt; }
+    .rec { margin-bottom: 14pt; padding-bottom: 10pt; border-bottom: 1px solid #ddd; }
+    .rec p { margin: 0 0 5pt; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 14pt; font-size: 12pt; }
+    th { border: 1px solid #888; padding: 6pt 10pt; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; }
+    td { border: 1px solid #aaa; padding: 6pt 10pt; font-size: 12pt; }
+    .footer { margin-top: 18pt; padding-top: 8pt; border-top: 1px solid #aaa; font-size: 12pt; color: #555; }
   </style>
   </head><body>
     <h1>Financial Planning Report</h1>
@@ -849,29 +847,21 @@ function downloadRecommendations() {
     <h2>Financial Summary</h2>
     <p>${ai.summary || ''}</p>
 
-    <div style="page-break-inside:avoid;">
-      <h2>Key Metrics</h2>
-      <table><tr>${snapshotRows}</tr></table>
-    </div>
+    <h2>Key Metrics</h2>
+    <table><tr>${snapshotRows}</tr></table>
 
-    <div style="page-break-before:always;">
-      <h2>Recommended Income Allocation</h2>
-      <table style="width:100%;border-collapse:collapse;">
-        <tr>
-          <th style="width:35%;">Category</th>
-          <th style="width:20%;">Current %</th>
-          <th style="width:25%;">Recommended %</th>
-          <th style="width:20%;">Change</th>
-        </tr>
-        ${allocationRows}
-      </table>
-    </div>
+    <h2>Recommended Income Allocation</h2>
+    <table>
+      <tr>
+        <th style="width:35%;">Category</th>
+        <th style="width:20%;">Current %</th>
+        <th style="width:25%;">Recommended %</th>
+        <th style="width:20%;">Change</th>
+      </tr>
+      ${allocationRows}
+    </table>
 
-    ${ai.product_rationale ? `
-    <div style="page-break-inside:avoid;">
-      <h2>Why ${focus.type} Is the Right Choice</h2>
-      <p>${ai.product_rationale}</p>
-    </div>` : ''}
+    ${ai.product_rationale ? `<h2>Why ${focus.type} Is the Right Choice</h2><p>${ai.product_rationale}</p>` : ''}
 
     <h2>Growth Projection — ${focus.type}</h2>
     <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
