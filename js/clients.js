@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v34)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v35)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -803,7 +803,7 @@ function downloadRecommendations() {
   const allocationRows = (ai.allocation || []).map(a => {
     const change = a.recommended - a.current;
     const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '—';
-    return `<tr>
+    return `<tr style="page-break-inside:avoid;mso-keep-together:yes;">
       <td style="padding:7px 12px;border:1px solid #ccc;">${a.label}</td>
       <td style="padding:7px 12px;border:1px solid #ccc;text-align:center;">${a.current}%</td>
       <td style="padding:7px 12px;border:1px solid #ccc;text-align:center;">${a.recommended}%</td>
@@ -864,18 +864,16 @@ function downloadRecommendations() {
       <table><tr>${snapshotRows}</tr></table>
     </div>
 
-    <div style="page-break-inside:avoid;">
-      <h2>Recommended Income Allocation</h2>
-      <table>
-        <tr>
-          <th style="width:35%;">Category</th>
-          <th style="width:20%;">Current %</th>
-          <th style="width:25%;">Recommended %</th>
-          <th style="width:20%;">Change</th>
-        </tr>
-        ${allocationRows}
-      </table>
-    </div>
+    <h2 style="page-break-after:avoid;">Recommended Income Allocation</h2>
+    <table style="page-break-inside:avoid;mso-keep-together:yes;width:100%;border-collapse:collapse;">
+      <tr>
+        <th style="width:35%;">Category</th>
+        <th style="width:20%;">Current %</th>
+        <th style="width:25%;">Recommended %</th>
+        <th style="width:20%;">Change</th>
+      </tr>
+      ${allocationRows}
+    </table>
 
     ${ai.product_rationale ? `
     <div style="page-break-inside:avoid;">
