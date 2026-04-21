@@ -430,60 +430,19 @@ async function getAIRecommendations() {
   document.getElementById('aiOutput').style.display     = 'none';
   document.getElementById('aiLoading').style.display    = 'block';
 
-  const prompt = `You are a financial planning assistant helping Brady Wells, a Northwestern Mutual Financial Representative intern, prepare for a client meeting.
+  const prompt = `Financial planning assistant for Brady Wells (Northwestern Mutual intern). Respond with ONLY a single-line compact JSON object — no whitespace, no indentation, no markdown, no code fences.
 
-Client: ${c.first_name || ''} ${c.last_name || ''}
-Age: ${fp.age || 'Unknown'}
-Marital Status: ${fp.marital || 'Unknown'}
-Dependents: ${fp.dependents !== undefined ? fp.dependents : 'Unknown'}
-Annual Income: ${fmt(fp.income)}
-Monthly Expenses: ${fmt(fp.expenses)}
-Total Debt: ${fmt(fp.debt)}
-Total Assets/Savings: ${fmt(fp.assets)}
-Life Insurance: ${fp.insurance || 'None'}
-Retirement Account: ${fp.retirement || 'None'}
-Risk Tolerance: ${fp.risk || 'Unknown'}
-Financial Goals: ${fp.goals || 'Not specified'}
+Client: ${c.first_name || ''} ${c.last_name || ''}, Age ${fp.age || '?'}, ${fp.marital || ''}, ${fp.dependents || 0} dependents
+Income: ${fmt(fp.income)}/yr | Expenses: ${fmt(fp.expenses)}/mo | Debt: ${fmt(fp.debt)} | Assets: ${fmt(fp.assets)}
+Insurance: ${fp.insurance || 'None'} | Retirement: ${fp.retirement || 'None'} | Risk: ${fp.risk || '?'}
+Goals: ${fp.goals || 'Not specified'}
+Investment focus: ${focus.type}, $${focus.monthly}/mo, goal age ${focus.goalAge}, ${rate}% return
+Projected value now: ${fmtK(growNow)} | If waiting 5 yrs: ${fmtK(growDelay5)} | Cost of waiting: ${growNow && growDelay5 ? fmtK(growNow - growDelay5) : 'N/A'}
 
-INVESTMENT FOCUS FOR THIS MEETING:
-Product/Strategy: ${focus.type}
-Monthly Contribution: ${focus.monthly > 0 ? '$' + focus.monthly : 'Not specified'}
-Goal Age: ${focus.goalAge}
-Assumed Annual Return: ${rate}%
-Projected Value Starting Now (${safeYears} years): ${fmtK(growNow)}
-Projected Value If Starting 5 Years Later: ${fmtK(growDelay5)}
-Cost of Waiting 5 Years: ${growNow && growDelay5 ? fmtK(growNow - growDelay5) + ' less' : 'N/A'}
+Return exactly this JSON shape (single line, no extra spaces):
+{"summary":"2 sentences using real numbers","snapshot":[{"label":"Monthly Income","value":"$X"},{"label":"Monthly Surplus","value":"$X"},{"label":"Debt-to-Income","value":"X%"},{"label":"Savings Rate","value":"X%"}],"allocation":[{"label":"Living Expenses","current":0,"recommended":0},{"label":"Debt Payments","current":0,"recommended":0},{"label":"Emergency Fund","current":0,"recommended":0},{"label":"Retirement","current":0,"recommended":0},{"label":"Investments","current":0,"recommended":0}],"recommendations":[{"title":"short title","priority":"High","why":"1 sentence with real numbers","action":"1 sentence with exact dollars and product","timeline":"X months","product":"specific NM product or empty"},{"title":"...","priority":"Medium","why":"...","action":"...","timeline":"...","product":"..."},{"title":"...","priority":"Medium","why":"...","action":"...","timeline":"...","product":"..."}],"product_rationale":"2 sentences on why ${focus.type} is right for this client","conclusion":"2 sentences: next steps and cost of waiting ${fmtK(growNow && growDelay5 ? growNow - growDelay5 : null)}."}
 
-Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
-{
-  "summary": "2-3 sentence overview of their financial situation using their actual numbers",
-  "snapshot": [
-    {"label": "Monthly Income", "value": "$X,XXX"},
-    {"label": "Monthly Surplus", "value": "$X,XXX"},
-    {"label": "Debt-to-Income", "value": "XX%"},
-    {"label": "Savings Rate", "value": "XX%"}
-  ],
-  "allocation": [
-    {"label": "Living Expenses", "current": 0, "recommended": 0},
-    {"label": "Debt Payments", "current": 0, "recommended": 0},
-    {"label": "Emergency Fund", "current": 0, "recommended": 0},
-    {"label": "Retirement", "current": 0, "recommended": 0},
-    {"label": "Investments", "current": 0, "recommended": 0}
-  ],
-  "recommendations": [
-    {
-      "title": "...",
-      "priority": "High",
-      "why": "Specific explanation referencing their actual numbers",
-      "action": "Concrete action with exact dollar amounts, specific policy types and coverage amounts, account types, monthly contributions based on their income",
-      "timeline": "...",
-      "product": "Specific NM product — include policy type, coverage amount, and why it beats alternatives for their situation. Empty string if not applicable."
-    }
-  ],
-  "product_rationale": "3-4 sentences explaining exactly why ${focus.type} is the right choice for this specific client. Reference their age, income, tax situation, goals, and the projected ${fmtK(growNow)} outcome. Compare to the alternative options they could have chosen and why those are inferior for their situation.",
-  "conclusion": "3-4 sentence next steps — specific products, dollar amounts, and timelines. Mention the cost of waiting (${fmtK(growNow && growDelay5 ? growNow - growDelay5 : null)} less if they wait 5 years). Make it feel urgent and personalized."
-}
-Use real numbers throughout. Allocation values are % of monthly income. Include 4-5 recommendations. Priority must be High, Medium, or Low.`;
+Allocation values = % of monthly income. Priority = High/Medium/Low only. Use actual client numbers.`;
 
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/claude-recommend', {
@@ -505,7 +464,7 @@ Use real numbers throughout. Allocation values are % of monthly income. Include 
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v21)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v24)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
