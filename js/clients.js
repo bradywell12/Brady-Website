@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v31)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v32)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -595,13 +595,9 @@ const SAMPLE_AI = {
 
 function loadTestRecommendations() {
   lastAIResult = SAMPLE_AI;
-  // Populate invest fields with realistic test values if empty
-  if (!document.getElementById('investMonthly').value) {
-    document.getElementById('investMonthly').value = '417';
-  }
-  if (!document.getElementById('investGoalAge').value) {
-    document.getElementById('investGoalAge').value = '65';
-  }
+  // Always set test invest values so growth table has real numbers
+  document.getElementById('investMonthly').value = '417';
+  document.getElementById('investGoalAge').value = '65';
   document.getElementById('aiEmptyState').style.display = 'none';
   document.getElementById('aiOutput').style.display  = 'block';
   document.getElementById('aiTimestamp').textContent = 'Sample data — no API call made';
@@ -816,11 +812,11 @@ function downloadRecommendations() {
   }).join('');
 
   const recSections = (ai.recommendations || []).map((r, i) => `
-    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #ddd;">
-      <p style="margin:0 0 4px;font-weight:bold;">${i+1}. ${r.title} <span style="font-weight:normal;">(${r.priority} Priority)</span></p>
-      <p style="margin:0 0 4px;">${r.why}</p>
-      <p style="margin:0 0 4px;"><strong>Recommended Action:</strong> ${r.action}</p>
-      <p style="margin:0;"><strong>Timeline:</strong> ${r.timeline}${r.product ? ' &nbsp;|&nbsp; <strong>Product:</strong> ' + r.product : ''}</p>
+    <div class="rec">
+      <p><strong>${i+1}. ${r.title}</strong> (${r.priority} Priority)</p>
+      <p>${r.why}</p>
+      <p><strong>Recommended Action:</strong> ${r.action}</p>
+      <p><strong>Timeline:</strong> ${r.timeline}${r.product ? ' &nbsp;|&nbsp; <strong>Product:</strong> ' + r.product : ''}</p>
     </div>`).join('');
 
   const clientInfo = [
@@ -837,16 +833,19 @@ function downloadRecommendations() {
 
   const docHtml = `<html><head><meta charset="utf-8">
   <style>
-    @page { margin: 0.75in 0.65in; }
-    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0; color: #111; font-size: 12pt; }
-    h1 { font-size: 20pt; margin: 0 0 4px; font-weight: bold; }
-    .subtitle { font-size: 12pt; color: #444; margin: 0 0 20px; }
-    h2 { font-size: 13pt; font-weight: bold; margin: 20px 0 6px; border-bottom: 1px solid #000; padding-bottom: 3px; }
-    p { margin: 0 0 10px; line-height: 1.6; font-size: 12pt; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12pt; }
-    th { border: 1px solid #888; padding: 6px 10px; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; }
-    td { border: 1px solid #aaa; padding: 6px 10px; font-size: 12pt; }
-    .footer { margin-top: 32px; padding-top: 10px; border-top: 1px solid #aaa; font-size: 12pt; color: #555; }
+    @page { margin: 1in 0.75in; }
+    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0; color: #111; font-size: 12pt; mso-margin-top-alt:auto; mso-margin-bottom-alt:auto; }
+    h1 { font-size: 20pt; margin: 0 0 6pt; font-weight: bold; }
+    .subtitle { font-size: 12pt; color: #444; margin: 0 0 18pt; }
+    h2 { font-size: 13pt; font-weight: bold; margin: 18pt 0 8pt; border-bottom: 1px solid #000; padding-bottom: 3pt; }
+    p { margin: 0 0 12pt; line-height: 1.7; font-size: 12pt; }
+    .rec { margin-bottom: 18pt; padding-bottom: 14pt; border-bottom: 1px solid #ddd; }
+    .rec p { margin: 0 0 6pt; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 18pt; font-size: 12pt; }
+    th { border: 1px solid #888; padding: 7pt 10pt; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; }
+    td { border: 1px solid #aaa; padding: 7pt 10pt; font-size: 12pt; }
+    img { display: block; width: 100%; height: auto; margin-bottom: 14pt; }
+    .footer { margin-top: 24pt; padding-top: 10pt; border-top: 1px solid #aaa; font-size: 12pt; color: #555; }
   </style>
   </head><body>
     <h1>Financial Planning Report</h1>
@@ -879,7 +878,7 @@ function downloadRecommendations() {
 
     <h2>Growth Projection — ${focus.type}</h2>
     <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
-    ${chartImgSrc ? `<img src="${chartImgSrc}" width="100%" style="display:block;margin-bottom:14px;max-width:100%;" />` : ''}
+    ${chartImgSrc ? `<img src="${chartImgSrc}" />` : ''}
     <table>
       <tr>
         <th>Age</th><th>Years Invested</th><th>Start Now</th><th>Wait 5 Years</th><th>Cost of Waiting</th>
