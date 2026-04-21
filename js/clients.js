@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v28)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v29)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -787,9 +787,16 @@ function downloadRecommendations() {
   const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
   const date = new Date().toLocaleDateString();
 
-  // Capture the chart canvas as a base64 PNG image
+  // Capture the chart canvas, resampled to a fixed print-friendly size
   const chartCanvas = document.getElementById('growthChart');
-  const chartImgSrc = chartCanvas ? chartCanvas.toDataURL('image/png') : null;
+  let chartImgSrc = null;
+  if (chartCanvas) {
+    const printCanvas = document.createElement('canvas');
+    printCanvas.width  = 660;
+    printCanvas.height = 260;
+    printCanvas.getContext('2d').drawImage(chartCanvas, 0, 0, 660, 260);
+    chartImgSrc = printCanvas.toDataURL('image/png');
+  }
 
   const snapshotRows = (ai.snapshot || []).map(s =>
     `<td style="width:25%;padding:10px;text-align:center;border:1px solid #ddd;">
@@ -830,19 +837,18 @@ function downloadRecommendations() {
 
   const docHtml = `<html><head><meta charset="utf-8">
   <style>
-    body { font-family: "Times New Roman", Times, serif; margin: 0; color: #111; font-size: 12pt; }
-    .page { padding: 0.6in 0.65in 0.6in 0.65in; }
+    @page { margin: 0.5in; }
+    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0.5in; color: #111; font-size: 12pt; }
     h1 { font-size: 20pt; margin: 0 0 4px; font-weight: bold; }
-    .subtitle { font-size: 11pt; color: #444; margin: 0 0 24px; }
-    h2 { font-size: 13pt; font-weight: bold; margin: 24px 0 6px; border-bottom: 1px solid #000; padding-bottom: 3px; }
-    p { margin: 0 0 10px; line-height: 1.6; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 11pt; }
-    th { border: 1px solid #888; padding: 6px 10px; text-align: left; font-weight: bold; background: #f0f0f0; }
-    td { border: 1px solid #aaa; padding: 6px 10px; }
-    .footer { margin-top: 32px; padding-top: 10px; border-top: 1px solid #aaa; font-size: 9pt; color: #555; }
+    .subtitle { font-size: 12pt; color: #444; margin: 0 0 20px; }
+    h2 { font-size: 13pt; font-weight: bold; margin: 20px 0 6px; border-bottom: 1px solid #000; padding-bottom: 3px; }
+    p { margin: 0 0 10px; line-height: 1.6; font-size: 12pt; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12pt; }
+    th { border: 1px solid #888; padding: 6px 10px; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; }
+    td { border: 1px solid #aaa; padding: 6px 10px; font-size: 12pt; }
+    .footer { margin-top: 32px; padding-top: 10px; border-top: 1px solid #aaa; font-size: 12pt; color: #555; }
   </style>
   </head><body>
-  <div class="page">
     <h1>Financial Planning Report</h1>
     <p class="subtitle">${name} &nbsp;|&nbsp; Prepared by Brady Wells, Northwestern Mutual &nbsp;|&nbsp; ${date}</p>
 
@@ -901,7 +907,6 @@ function downloadRecommendations() {
     <div class="footer">
       This report was prepared by Brady Wells, Financial Representative Intern at Northwestern Mutual. For informational purposes only. &copy; ${new Date().getFullYear()} Northwestern Mutual.
     </div>
-  </div>
   </body></html>`;
 
   const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword' });
