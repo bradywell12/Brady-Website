@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v24)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v25)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -779,6 +779,10 @@ function downloadRecommendations() {
   const safeYears = Math.max((focus.goalAge || 65) - (fp.age || 25), 1);
   const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
   const date = new Date().toLocaleDateString();
+
+  // Capture the chart canvas as a base64 PNG image
+  const chartCanvas = document.getElementById('growthChart');
+  const chartImgSrc = chartCanvas ? chartCanvas.toDataURL('image/png') : null;
   const priorityColor = { High: '#c0392b', Medium: '#d97706', Low: '#16a34a' };
 
   const snapshotRows = (ai.snapshot || []).map(s =>
@@ -872,6 +876,7 @@ function downloadRecommendations() {
 
     <div class="section-title">Growth Projection — ${focus.type}</div>
     <p style="font-size:11px;color:#64748b;margin:0 0 8px;">Contributing $${Number(focus.monthly).toLocaleString()}/month at ${rate}% annual return</p>
+    ${chartImgSrc ? `<img src="${chartImgSrc}" style="width:100%;max-width:600px;margin-bottom:12px;display:block;" />` : ''}
     <table>
       <tr>
         <th>Age</th><th>Years Invested</th><th>Start Now</th><th>Wait 5 Years</th><th>Cost of Waiting</th>
