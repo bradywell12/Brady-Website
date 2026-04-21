@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v37)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v38)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -783,16 +783,6 @@ function downloadRecommendations() {
   const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
   const date = new Date().toLocaleDateString();
 
-  // Capture the chart canvas, resampled to a fixed print-friendly size
-  const chartCanvas = document.getElementById('growthChart');
-  let chartImgSrc = null;
-  if (chartCanvas) {
-    const printCanvas = document.createElement('canvas');
-    printCanvas.width  = 720;
-    printCanvas.height = 270;
-    printCanvas.getContext('2d').drawImage(chartCanvas, 0, 0, 720, 270);
-    chartImgSrc = printCanvas.toDataURL('image/png');
-  }
 
   const snapshotRows = (ai.snapshot || []).map(s =>
     `<td style="width:25%;padding:10px;text-align:center;border:1px solid #ddd;">
@@ -883,10 +873,8 @@ function downloadRecommendations() {
       <p>${ai.product_rationale}</p>
     </div>` : ''}
 
-    <div style="page-break-before:always;">
-      <h2>Growth Projection — ${focus.type}</h2>
-      <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
-      ${chartImgSrc ? `<img src="${chartImgSrc}" width="100%" style="width:100%;display:block;" />` : ''}
+    <h2>Growth Projection — ${focus.type}</h2>
+    <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
     <table>
       <tr>
         <th>Age</th><th>Years Invested</th><th>Start Now</th><th>Wait 5 Years</th><th>Cost of Waiting</th>
@@ -903,7 +891,6 @@ function downloadRecommendations() {
         </tr>`;
       }).join('')}
     </table>
-    </div>
 
     <h2>Recommendations</h2>
     ${recSections}
