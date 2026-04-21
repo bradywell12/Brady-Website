@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v30)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v31)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -837,8 +837,8 @@ function downloadRecommendations() {
 
   const docHtml = `<html><head><meta charset="utf-8">
   <style>
-    @page { margin: 0.5in; }
-    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0.5in; color: #111; font-size: 12pt; }
+    @page { margin: 0.75in 0.65in; }
+    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0; color: #111; font-size: 12pt; }
     h1 { font-size: 20pt; margin: 0 0 4px; font-weight: bold; }
     .subtitle { font-size: 12pt; color: #444; margin: 0 0 20px; }
     h2 { font-size: 13pt; font-weight: bold; margin: 20px 0 6px; border-bottom: 1px solid #000; padding-bottom: 3px; }
