@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v29)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v30)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -800,8 +800,8 @@ function downloadRecommendations() {
 
   const snapshotRows = (ai.snapshot || []).map(s =>
     `<td style="width:25%;padding:10px;text-align:center;border:1px solid #ddd;">
-       <div style="font-size:18px;font-weight:bold;color:#0d1b3e;">${s.value}</div>
-       <div style="font-size:10px;color:#64748b;margin-top:3px;">${s.label}</div>
+       <div style="font-weight:bold;">${s.value}</div>
+       <div>${s.label}</div>
      </td>`).join('');
 
   const allocationRows = (ai.allocation || []).map(a => {
@@ -817,10 +817,10 @@ function downloadRecommendations() {
 
   const recSections = (ai.recommendations || []).map((r, i) => `
     <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #ddd;">
-      <p style="margin:0 0 4px;font-size:13px;font-weight:bold;">${i+1}. ${r.title} <span style="font-size:11px;font-weight:normal;">(${r.priority} Priority)</span></p>
-      <p style="margin:0 0 4px;font-size:12px;">${r.why}</p>
-      <p style="margin:0 0 4px;font-size:12px;"><strong>Recommended Action:</strong> ${r.action}</p>
-      <p style="margin:0;font-size:12px;"><strong>Timeline:</strong> ${r.timeline}${r.product ? ' &nbsp;|&nbsp; <strong>Product:</strong> ' + r.product : ''}</p>
+      <p style="margin:0 0 4px;font-weight:bold;">${i+1}. ${r.title} <span style="font-weight:normal;">(${r.priority} Priority)</span></p>
+      <p style="margin:0 0 4px;">${r.why}</p>
+      <p style="margin:0 0 4px;"><strong>Recommended Action:</strong> ${r.action}</p>
+      <p style="margin:0;"><strong>Timeline:</strong> ${r.timeline}${r.product ? ' &nbsp;|&nbsp; <strong>Product:</strong> ' + r.product : ''}</p>
     </div>`).join('');
 
   const clientInfo = [
