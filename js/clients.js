@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v26)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v27)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -783,7 +783,6 @@ function downloadRecommendations() {
   // Capture the chart canvas as a base64 PNG image
   const chartCanvas = document.getElementById('growthChart');
   const chartImgSrc = chartCanvas ? chartCanvas.toDataURL('image/png') : null;
-  const priorityColor = { High: '#c0392b', Medium: '#d97706', Low: '#16a34a' };
 
   const snapshotRows = (ai.snapshot || []).map(s =>
     `<td style="width:25%;padding:10px;text-align:center;border:1px solid #ddd;">
@@ -792,26 +791,22 @@ function downloadRecommendations() {
      </td>`).join('');
 
   const allocationRows = (ai.allocation || []).map(a => {
-    const bar = (pct, color) => `<div style="display:inline-block;width:${Math.min(pct,100)*2}px;height:12px;background:${color};border-radius:3px;vertical-align:middle;"></div> ${pct}%`;
+    const change = a.recommended - a.current;
+    const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '—';
     return `<tr>
-      <td style="padding:6px 10px;border:1px solid #ddd;font-weight:500;">${a.label}</td>
-      <td style="padding:6px 10px;border:1px solid #ddd;">${bar(a.current, '#94a3b8')}</td>
-      <td style="padding:6px 10px;border:1px solid #ddd;">${bar(a.recommended, '#c9a84c')}</td>
-      <td style="padding:6px 10px;border:1px solid #ddd;color:${a.recommended > a.current ? '#16a34a' : '#dc2626'};font-weight:600;">
-        ${a.recommended > a.current ? '▲' : a.recommended < a.current ? '▼' : '—'} ${Math.abs(a.recommended - a.current)}%
-      </td>
+      <td style="padding:7px 12px;border:1px solid #ccc;">${a.label}</td>
+      <td style="padding:7px 12px;border:1px solid #ccc;text-align:center;">${a.current}%</td>
+      <td style="padding:7px 12px;border:1px solid #ccc;text-align:center;">${a.recommended}%</td>
+      <td style="padding:7px 12px;border:1px solid #ccc;text-align:center;">${arrow} ${Math.abs(change)}%</td>
     </tr>`;
   }).join('');
 
   const recSections = (ai.recommendations || []).map((r, i) => `
-    <div style="margin-bottom:18px;border-left:5px solid ${priorityColor[r.priority] || '#94a3b8'};padding:12px 16px;background:#fafafa;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-        <span style="font-size:14px;font-weight:bold;color:#0d1b3e;">${i+1}. ${r.title}</span>
-        <span style="font-size:11px;font-weight:600;color:${priorityColor[r.priority] || '#64748b'};">${r.priority} Priority</span>
-      </div>
-      <p style="margin:0 0 6px;font-size:12px;color:#475569;">${r.why}</p>
-      <p style="margin:0 0 4px;font-size:12px;"><strong>Action:</strong> ${r.action}</p>
-      <p style="margin:0;font-size:11px;color:#64748b;">Timeline: ${r.timeline}${r.product ? ' &nbsp;|&nbsp; Product: ' + r.product : ''}</p>
+    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #ddd;">
+      <p style="margin:0 0 4px;font-size:13px;font-weight:bold;">${i+1}. ${r.title} <span style="font-size:11px;font-weight:normal;">(${r.priority} Priority)</span></p>
+      <p style="margin:0 0 4px;font-size:12px;">${r.why}</p>
+      <p style="margin:0 0 4px;font-size:12px;"><strong>Recommended Action:</strong> ${r.action}</p>
+      <p style="margin:0;font-size:12px;"><strong>Timeline:</strong> ${r.timeline}${r.product ? ' &nbsp;|&nbsp; <strong>Product:</strong> ' + r.product : ''}</p>
     </div>`).join('');
 
   const clientInfo = [
@@ -828,55 +823,50 @@ function downloadRecommendations() {
 
   const docHtml = `<html><head><meta charset="utf-8">
   <style>
-    body { font-family: Calibri, Arial, sans-serif; margin: 0; color: #1e293b; font-size: 12px; }
-    .header { background: #0d1b3e; color: white; padding: 24px 32px; }
-    .header h1 { margin: 0 0 4px; font-size: 22px; }
-    .header p { margin: 0; opacity: 0.75; font-size: 11px; }
-    .body { padding: 24px 32px; }
-    .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.05em; color: #0d1b3e; border-bottom: 2px solid #c9a84c;
-      padding-bottom: 4px; margin: 20px 0 12px; }
-    .summary-box { background: #f1f5f9; border-left: 4px solid #0d1b3e; padding: 12px 16px; margin-bottom: 16px; line-height: 1.6; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
-    th { background: #0d1b3e; color: white; padding: 8px 10px; text-align: left; font-size: 11px; }
-    .footer { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 32px; font-size: 10px; color: #94a3b8; }
+    body { font-family: "Times New Roman", Times, serif; margin: 0; color: #111; font-size: 12pt; }
+    .page { padding: 1in 1in 0.75in 1in; }
+    h1 { font-size: 20pt; margin: 0 0 4px; font-weight: bold; }
+    .subtitle { font-size: 11pt; color: #444; margin: 0 0 24px; }
+    h2 { font-size: 13pt; font-weight: bold; margin: 24px 0 6px; border-bottom: 1px solid #000; padding-bottom: 3px; }
+    p { margin: 0 0 10px; line-height: 1.6; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 11pt; }
+    th { border: 1px solid #888; padding: 6px 10px; text-align: left; font-weight: bold; background: #f0f0f0; }
+    td { border: 1px solid #aaa; padding: 6px 10px; }
+    .footer { margin-top: 32px; padding-top: 10px; border-top: 1px solid #aaa; font-size: 9pt; color: #555; }
   </style>
   </head><body>
-  <div class="header">
+  <div class="page">
     <h1>Financial Planning Report</h1>
-    <p>${name} &nbsp;|&nbsp; Prepared by Brady Wells, Northwestern Mutual &nbsp;|&nbsp; ${date}</p>
-  </div>
-  <div class="body">
-    <div class="section-title">Client Overview</div>
-    <p style="color:#475569;font-size:11px;margin:0 0 12px;">${clientInfo}</p>
-    ${fp.goals ? `<p style="margin:0 0 16px;"><strong>Goals:</strong> ${fp.goals}</p>` : ''}
+    <p class="subtitle">${name} &nbsp;|&nbsp; Prepared by Brady Wells, Northwestern Mutual &nbsp;|&nbsp; ${date}</p>
 
-    <div class="section-title">Financial Summary</div>
-    <div class="summary-box">${ai.summary || ''}</div>
+    <h2>Client Overview</h2>
+    <p>${clientInfo}</p>
+    ${fp.goals ? `<p><strong>Financial Goals:</strong> ${fp.goals}</p>` : ''}
 
-    <div class="section-title">Key Metrics</div>
+    <h2>Financial Summary</h2>
+    <p>${ai.summary || ''}</p>
+
+    <h2>Key Metrics</h2>
     <table><tr>${snapshotRows}</tr></table>
 
-    <div class="section-title">Recommended Income Allocation</div>
+    <h2>Recommended Income Allocation</h2>
     <table>
       <tr>
         <th style="width:35%;">Category</th>
-        <th style="width:25%;">Current %</th>
+        <th style="width:20%;">Current %</th>
         <th style="width:25%;">Recommended %</th>
-        <th style="width:15%;">Change</th>
+        <th style="width:20%;">Change</th>
       </tr>
       ${allocationRows}
     </table>
 
     ${ai.product_rationale ? `
-    <div class="section-title">Why ${focus.type} Is the Right Choice</div>
-    <div style="border-left:4px solid #c9a84c;padding:10px 14px;background:#fffbf0;margin-bottom:16px;">
-      <p style="margin:0;font-size:12px;line-height:1.65;">${ai.product_rationale}</p>
-    </div>` : ''}
+    <h2>Why ${focus.type} Is the Right Choice</h2>
+    <p>${ai.product_rationale}</p>` : ''}
 
-    <div class="section-title">Growth Projection — ${focus.type}</div>
-    <p style="font-size:11px;color:#64748b;margin:0 0 8px;">Contributing $${Number(focus.monthly).toLocaleString()}/month at ${rate}% annual return</p>
-    ${chartImgSrc ? `<img src="${chartImgSrc}" style="width:100%;max-width:600px;margin-bottom:12px;display:block;" />` : ''}
+    <h2>Growth Projection — ${focus.type}</h2>
+    <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
+    ${chartImgSrc ? `<img src="${chartImgSrc}" style="width:100%;margin-bottom:14px;display:block;" />` : ''}
     <table>
       <tr>
         <th>Age</th><th>Years Invested</th><th>Start Now</th><th>Wait 5 Years</th><th>Cost of Waiting</th>
@@ -887,23 +877,23 @@ function downloadRecommendations() {
         return `<tr>
           <td>${(fp.age || 25) + y}</td>
           <td>${y} years</td>
-          <td style="font-weight:600;color:#0d1b3e;">$${now.toLocaleString()}</td>
+          <td><strong>$${now.toLocaleString()}</strong></td>
           <td>$${wait.toLocaleString()}</td>
-          <td style="color:#b91c1c;">$${(now - wait).toLocaleString()} less</td>
+          <td>$${(now - wait).toLocaleString()} less</td>
         </tr>`;
       }).join('')}
     </table>
 
-    <div class="section-title">Recommendations</div>
+    <h2>Recommendations</h2>
     ${recSections}
+
     ${ai.conclusion ? `
-    <div style="background:#0d1b3e;color:white;padding:14px 18px;margin-top:8px;">
-      <div style="font-size:11px;font-weight:700;opacity:0.8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Next Steps</div>
-      <p style="margin:0;font-size:12px;line-height:1.6;">${ai.conclusion}</p>
-    </div>` : ''}
-  </div>
-  <div class="footer">
-    This report was prepared by Brady Wells, Financial Representative Intern at Northwestern Mutual. For informational purposes only. &copy; ${new Date().getFullYear()} Northwestern Mutual.
+    <h2>Next Steps</h2>
+    <p>${ai.conclusion}</p>` : ''}
+
+    <div class="footer">
+      This report was prepared by Brady Wells, Financial Representative Intern at Northwestern Mutual. For informational purposes only. &copy; ${new Date().getFullYear()} Northwestern Mutual.
+    </div>
   </div>
   </body></html>`;
 
