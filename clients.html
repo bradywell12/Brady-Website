@@ -798,10 +798,6 @@ Financial Representative | Northwestern Mutual</textarea>
               </select>
             </div>
           </div>
-          <div class="form-group full">
-            <label>Financial Goals</label>
-            <textarea id="fpGoals" class="form-input" rows="3" placeholder="e.g. Buy a house in 3 years, retire at 60, pay off student loans, start a college fund..."></textarea>
-          </div>
           <!-- Investment / Growth Planning -->
           <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:1rem 0 0.75rem;border-top:1px solid var(--border);padding-top:1rem;">Investment & Growth Planning</div>
           <div class="form-row">
@@ -830,13 +826,18 @@ Financial Representative | Northwestern Mutual</textarea>
               <label>Goal Age</label>
               <input type="number" id="investGoalAge" class="form-input" placeholder="65" min="1" max="100" />
             </div>
-            <div class="form-group" style="display:flex;align-items:flex-end;">
-              <span id="autoSaveStatus" style="font-size:0.78rem;color:#94a3b8;"></span>
-            </div>
+            <div class="form-group"></div>
           </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" onclick="closeClientProfile()">Close</button>
-            <button type="submit" class="btn-primary" id="saveProfileBtn">Get Recommendations</button>
+          <div class="form-group full">
+            <label>Financial Goals</label>
+            <textarea id="fpGoals" class="form-input" rows="3" placeholder="e.g. Buy a house in 3 years, retire at 60, pay off student loans, start a college fund..."></textarea>
+          </div>
+          <div class="modal-actions" style="display:flex;align-items:center;justify-content:space-between;">
+            <span id="autoSaveStatus" style="font-size:0.78rem;color:#94a3b8;"></span>
+            <div style="display:flex;gap:0.5rem;">
+              <button type="button" class="btn-secondary" onclick="closeClientProfile()">Close</button>
+              <button type="submit" class="btn-primary" id="saveProfileBtn">Get Recommendations</button>
+            </div>
           </div>
         </form>
       </div>
@@ -930,7 +931,7 @@ Financial Representative | Northwestern Mutual</textarea>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/supabase-config.js?v=10"></script>
-  <script src="js/clients.js?v=19"></script>
+  <script src="js/clients.js?v=20"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
