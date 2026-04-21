@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v36)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v37)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -864,16 +864,18 @@ function downloadRecommendations() {
       <table><tr>${snapshotRows}</tr></table>
     </div>
 
-    <h2 style="page-break-before:always;page-break-after:avoid;">Recommended Income Allocation</h2>
-    <table style="page-break-inside:avoid;mso-keep-together:yes;width:100%;border-collapse:collapse;">
-      <tr>
-        <th style="width:35%;">Category</th>
-        <th style="width:20%;">Current %</th>
-        <th style="width:25%;">Recommended %</th>
-        <th style="width:20%;">Change</th>
-      </tr>
-      ${allocationRows}
-    </table>
+    <div style="page-break-before:always;">
+      <h2>Recommended Income Allocation</h2>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr>
+          <th style="width:35%;">Category</th>
+          <th style="width:20%;">Current %</th>
+          <th style="width:25%;">Recommended %</th>
+          <th style="width:20%;">Change</th>
+        </tr>
+        ${allocationRows}
+      </table>
+    </div>
 
     ${ai.product_rationale ? `
     <div style="page-break-inside:avoid;">
@@ -881,8 +883,8 @@ function downloadRecommendations() {
       <p>${ai.product_rationale}</p>
     </div>` : ''}
 
-    <div style="page-break-inside:avoid;">
-      <h2 style="page-break-before:always;page-break-after:avoid;">Growth Projection — ${focus.type}</h2>
+    <div style="page-break-before:always;">
+      <h2>Growth Projection — ${focus.type}</h2>
       <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
       ${chartImgSrc ? `<img src="${chartImgSrc}" width="100%" style="width:100%;display:block;" />` : ''}
     <table>
