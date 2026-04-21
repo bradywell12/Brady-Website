@@ -501,12 +501,12 @@ Use real numbers throughout. Allocation values are % of monthly income. Include 
 
     const text = data.content?.[0]?.text || '';
     const ai = parseAIResponse(text);
-    lastAIResult = ai;
+    lastAIResult = ai || { _rawText: text };
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString();
-    document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : `<p>${escHtml(text)}</p>`;
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v21)';
+    document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
     document.getElementById('aiLoading').style.display    = 'none';
@@ -530,6 +530,30 @@ function parseAIResponse(text) {
     console.error('Raw text:', text.slice(0, 500));
     return null;
   }
+}
+
+function renderRawText(text) {
+  // Fallback: strip markdown fences and display as readable paragraphs
+  const cleaned = text
+    .replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '')
+    .replace(/^[\s\S]*?(?="summary")/, '')
+    .trim();
+
+  // Try to extract readable content from partial JSON
+  const extract = (key) => {
+    const m = cleaned.match(new RegExp('"' + key + '"\\s*:\\s*"([^"]*)"'));
+    return m ? m[1] : null;
+  };
+  const summary = extract('summary');
+  const conclusion = extract('conclusion');
+
+  let html = `<div style="background:#fff3cd;border-left:4px solid #f59e0b;padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:#92400e;">
+    Response formatting error — displaying raw output. Try clicking Refresh.
+  </div>`;
+  if (summary) html += `<div style="margin-bottom:1rem;"><strong>Summary:</strong><p style="margin:0.4rem 0 0;">${escHtml(summary)}</p></div>`;
+  if (conclusion) html += `<div style="margin-bottom:1rem;"><strong>Next Steps:</strong><p style="margin:0.4rem 0 0;">${escHtml(conclusion)}</p></div>`;
+  html += `<pre style="white-space:pre-wrap;font-size:0.75rem;color:#64748b;background:#f8fafc;padding:1rem;overflow-x:auto;">${escHtml(text)}</pre>`;
+  return html;
 }
 
 const SAMPLE_AI = {
@@ -762,6 +786,7 @@ function renderAIOutput(ai) {
 function downloadRecommendations() {
   const c = clients.find(x => x.id === currentProfileId);
   if (!c || !lastAIResult) { showToast('Generate recommendations first.', 'error'); return; }
+  if (lastAIResult._rawText) { showToast('Recommendations could not be parsed. Try Refresh first.', 'error'); return; }
   const ai = lastAIResult;
   const fp = c.financial_profile || {};
   const focus = getInvestFocus();
