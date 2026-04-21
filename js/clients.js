@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v39)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v40)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -823,18 +823,18 @@ function downloadRecommendations() {
 
   const docHtml = `<html><head><meta charset="utf-8">
   <style>
-    @page { margin: 1in 0.75in; }
+    @page { margin: 0.75in; }
     body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0; color: #111; font-size: 12pt; }
-    h1 { font-size: 20pt; margin: 0 0 6pt; font-weight: bold; }
-    .subtitle { font-size: 12pt; color: #444; margin: 0 0 14pt; }
-    h2 { font-size: 13pt; font-weight: bold; margin: 14pt 0 6pt; border-bottom: 1px solid #000; padding-bottom: 3pt; }
-    p { margin: 0 0 10pt; line-height: 1.6; font-size: 12pt; }
-    .rec { margin-bottom: 14pt; padding-bottom: 10pt; border-bottom: 1px solid #ddd; }
-    .rec p { margin: 0 0 5pt; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 14pt; font-size: 12pt; }
-    th { border: 1px solid #888; padding: 6pt 10pt; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; }
-    td { border: 1px solid #aaa; padding: 6pt 10pt; font-size: 12pt; }
-    .footer { margin-top: 18pt; padding-top: 8pt; border-top: 1px solid #aaa; font-size: 12pt; color: #555; }
+    h1 { font-size: 18pt; margin: 0 0 4pt; font-weight: bold; }
+    .subtitle { font-size: 12pt; color: #444; margin: 0 0 10pt; }
+    h2 { font-size: 12pt; font-weight: bold; margin: 10pt 0 4pt; border-bottom: 1px solid #000; padding-bottom: 2pt; }
+    p { margin: 0 0 8pt; line-height: 1.5; font-size: 12pt; }
+    .rec { margin-bottom: 10pt; padding-bottom: 8pt; border-bottom: 1px solid #ddd; }
+    .rec p { margin: 0 0 3pt; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; font-size: 12pt; }
+    th { border: 1px solid #888; padding: 4pt 8pt; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; }
+    td { border: 1px solid #aaa; padding: 4pt 8pt; font-size: 12pt; }
+    .footer { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid #aaa; font-size: 12pt; color: #555; }
   </style>
   </head><body>
     <h1>Financial Planning Report</h1>
