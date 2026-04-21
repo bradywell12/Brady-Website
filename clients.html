@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <title>Client Portal | Financial.Planning</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15.5' fill='%230d1b3e'/><circle cx='16' cy='16' r='14.5' fill='none' stroke='%23c9a84c' stroke-width='1'/><text x='16' y='21' text-anchor='middle' font-family='Georgia,serif' font-size='13' font-weight='700' fill='%23c9a84c'>BW</text></svg>" type="image/svg+xml" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15.5' fill='%230d1b3e'/><circle cx='16' cy='16' r='14.5' fill='none' stroke='%23c9a84c' stroke-width='1'/><text x='16' y='21' text-anchor='middle' font-family='Georgia,serif' font-size='13' font-weight='700' fill='%23c9a84c'>FA</text></svg>" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css?v=22" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
@@ -32,7 +32,7 @@
             <circle cx="110" cy="110" r="108" fill="url(#lgBg)"/>
             <circle cx="110" cy="110" r="104" fill="none" stroke="url(#lgGold)" stroke-width="2"/>
             <circle cx="110" cy="110" r="96" fill="none" stroke="#c9a84c" stroke-width="0.75" opacity="0.4"/>
-            <text x="110" y="108" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="68" font-weight="700" letter-spacing="-2" fill="url(#lgGold)">BW</text>
+            <text x="110" y="108" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="68" font-weight="700" letter-spacing="-2" fill="url(#lgGold)">FA</text>
             <line x1="58" y1="122" x2="162" y2="122" stroke="url(#lgGold)" stroke-width="1" opacity="0.7"/>
             <text x="110" y="142" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="13" font-weight="400" letter-spacing="3.5" fill="#c9a84c" opacity="0.85">ADVISOR</text>
             <polyline points="70,170 88,158 106,163 124,148 142,152 158,138" fill="none" stroke="url(#lgGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
@@ -116,9 +116,31 @@
   <div class="crm-header">
     <div class="container">
       <div class="crm-header-inner">
-        <div>
-          <h1 class="crm-title">Client Management</h1>
-          <p class="crm-subtitle">Welcome back, <span id="advisorName">Advisor</span> — manage your clients, track outreach, and grow your book of business.</p>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="64" height="64" style="flex-shrink:0;">
+            <defs>
+              <linearGradient id="dhBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#0d1b3e"/>
+                <stop offset="100%" style="stop-color:#1a2f5a"/>
+              </linearGradient>
+              <linearGradient id="dhGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#e8c96d"/>
+                <stop offset="100%" style="stop-color:#c9a84c"/>
+              </linearGradient>
+            </defs>
+            <circle cx="110" cy="110" r="108" fill="url(#dhBg)"/>
+            <circle cx="110" cy="110" r="104" fill="none" stroke="url(#dhGold)" stroke-width="2"/>
+            <circle cx="110" cy="110" r="96" fill="none" stroke="#c9a84c" stroke-width="0.75" opacity="0.4"/>
+            <text x="110" y="108" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="68" font-weight="700" letter-spacing="-2" fill="url(#dhGold)">FA</text>
+            <line x1="58" y1="122" x2="162" y2="122" stroke="url(#dhGold)" stroke-width="1" opacity="0.7"/>
+            <text x="110" y="142" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="13" font-weight="400" letter-spacing="3.5" fill="#c9a84c" opacity="0.85">ADVISOR</text>
+            <polyline points="70,170 88,158 106,163 124,148 142,152 158,138" fill="none" stroke="url(#dhGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+            <circle cx="158" cy="138" r="3" fill="url(#dhGold)" opacity="0.8"/>
+          </svg>
+          <div>
+            <h1 class="crm-title">Client Management</h1>
+            <p class="crm-subtitle">Welcome back, <span id="advisorName">Advisor</span> — manage your clients, track outreach, and grow your book of business.</p>
+          </div>
         </div>
         <div class="crm-header-actions">
           <button class="btn-logout" id="logoutBtn">Sign Out</button>
