@@ -847,20 +847,20 @@ Financial Representative | Northwestern Mutual</textarea>
       <!-- AI Recommendations pane -->
       <div id="profilePaneAI" style="display:none;overflow-y:auto;flex:1;">
         <div style="padding:1.25rem 1.75rem;">
+          <!-- Always-visible toolbar -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);">
+            <span style="font-size:0.78rem;color:var(--text-muted);" id="aiTimestamp">No recommendations yet</span>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn-outline" style="font-size:0.8rem;padding:0.3rem 0.75rem;background:#f1f5f9;" onclick="loadTestRecommendations()" title="Load sample data — no API credits used">Test Data</button>
+              <button class="btn-outline" style="font-size:0.8rem;padding:0.3rem 0.75rem;" onclick="getAIRecommendations()">Refresh</button>
+              <button class="btn-outline" style="font-size:0.8rem;padding:0.3rem 0.75rem;" onclick="downloadRecommendations()">Download</button>
+            </div>
+          </div>
           <div id="aiEmptyState" style="text-align:center;padding:0.75rem 0 1.25rem;">
-            <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Fill in the Financial Info tab, then click Get Recommendations.</p>
-            <button class="btn-primary" id="getRecsBtn" onclick="getAIRecommendations()">Get Recommendations</button>
-            <button class="btn-outline" style="margin-left:0.5rem;font-size:0.82rem;" onclick="loadTestRecommendations()">Load Test Data</button>
+            <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:0;">Fill in the Financial Info tab, then click Get Recommendations — or use <strong>Test Data</strong> above to preview without using credits.</p>
             <p id="aiNoDataWarning" style="display:none;color:#b45309;font-size:0.83rem;margin-top:0.75rem;">Save some financial info first for better recommendations.</p>
           </div>
           <div id="aiOutput" style="display:none;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-              <span style="font-size:0.78rem;color:var(--text-muted);" id="aiTimestamp"></span>
-              <div style="display:flex;gap:0.5rem;">
-                <button class="btn-outline" style="font-size:0.8rem;padding:0.3rem 0.75rem;" onclick="getAIRecommendations()">Refresh</button>
-                <button class="btn-outline" style="font-size:0.8rem;padding:0.3rem 0.75rem;" onclick="downloadRecommendations()">Download</button>
-              </div>
-            </div>
             <div id="aiContent" style="line-height:1.6;font-size:0.88rem;"></div>
           </div>
           <div id="aiLoading" style="display:none;text-align:center;padding:2rem 0;">
@@ -933,7 +933,7 @@ Financial Representative | Northwestern Mutual</textarea>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/supabase-config.js?v=10"></script>
-  <script src="js/clients.js?v=25"></script>
+  <script src="js/clients.js?v=26"></script>
   <script>
     document.getElementById('navToggle').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
