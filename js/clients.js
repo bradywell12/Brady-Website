@@ -519,9 +519,15 @@ function parseAIResponse(text) {
   try {
     const start = text.indexOf('{');
     const end   = text.lastIndexOf('}');
-    if (start === -1 || end === -1 || end <= start) return null;
-    return JSON.parse(text.slice(start, end + 1));
-  } catch {
+    if (start === -1 || end === -1 || end <= start) {
+      console.error('parseAIResponse: no JSON object found in text:', text.slice(0, 200));
+      return null;
+    }
+    const slice = text.slice(start, end + 1);
+    return JSON.parse(slice);
+  } catch (e) {
+    console.error('parseAIResponse: JSON.parse failed:', e.message);
+    console.error('Raw text:', text.slice(0, 500));
     return null;
   }
 }
