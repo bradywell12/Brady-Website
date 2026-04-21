@@ -517,12 +517,10 @@ Use real numbers throughout. Allocation values are % of monthly income. Include 
 
 function parseAIResponse(text) {
   try {
-    // Remove any markdown fences and leading non-JSON characters
-    const cleaned = text
-      .replace(/^[\s\S]*?(?=\{)/, '')  // strip everything before first {
-      .replace(/\}[\s\S]*$/, '}')       // strip everything after last }
-      .trim();
-    return JSON.parse(cleaned);
+    const start = text.indexOf('{');
+    const end   = text.lastIndexOf('}');
+    if (start === -1 || end === -1 || end <= start) return null;
+    return JSON.parse(text.slice(start, end + 1));
   } catch {
     return null;
   }
