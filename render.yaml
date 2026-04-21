@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: brady-website
+    env: static
+    staticPublishPath: .
+    headers:
+      - path: /*.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /*.html
+        name: Pragma
+        value: no-cache
