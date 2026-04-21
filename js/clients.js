@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v44)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v49)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -821,36 +821,52 @@ function downloadRecommendations() {
     fp.risk ? `Risk Tolerance: ${fp.risk}` : null,
   ].filter(Boolean).join('&nbsp;&nbsp;|&nbsp;&nbsp;');
 
-  const docHtml = `<html><head><meta charset="utf-8">
+  const docHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head>
+  <meta charset="utf-8">
+  <meta name=ProgId content=Word.Document>
+  <meta name=Generator content="Microsoft Word 15">
+  <meta name=Originator content="Microsoft Word 15">
   <style>
-    @page { margin: 0.75in; }
-    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0; color: #111; font-size: 12pt; }
-    h1 { font-size: 18pt; margin: 0 0 4pt; font-weight: bold; }
-    .subtitle { font-size: 12pt; color: #444; margin: 0 0 10pt; }
-    h2 { font-size: 12pt; font-weight: bold; margin: 10pt 0 4pt; border-bottom: 1px solid #000; padding-bottom: 2pt; }
-    p { margin: 0 0 8pt; line-height: 1.5; font-size: 12pt; }
-    .rec { margin-bottom: 10pt; padding-bottom: 8pt; border-bottom: 1px solid #ddd; }
-    .rec p { margin: 0 0 3pt; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; font-size: 12pt; }
-    th { border: 1px solid #888; padding: 4pt 8pt; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; }
-    td { border: 1px solid #aaa; padding: 4pt 8pt; font-size: 12pt; }
-    .footer { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid #aaa; font-size: 12pt; color: #555; }
+    @page WordSection1 { size:8.5in 11.0in; margin:1.0in 1.0in 1.0in 1.0in; mso-header-margin:.5in; mso-footer-margin:.5in; mso-paper-source:0; }
+    div.WordSection1 { page:WordSection1; }
+    body { font-family: "Times New Roman", Times, serif; margin: 0; padding: 0; color: #000; font-size: 12pt; tab-interval: .5in; word-wrap: break-word; }
+    h1 { font-size: 18pt; margin: 0 0 6pt; font-weight: bold; font-family: "Times New Roman", Times, serif; }
+    .subtitle { font-size: 12pt; color: #444; margin: 0 0 12pt; font-family: "Times New Roman", Times, serif; }
+    h2 { font-size: 12pt; font-weight: bold; margin: 12pt 0 0; padding: 0; font-family: "Times New Roman", Times, serif; border: none; }
+    p { margin: 0 0 8pt; line-height: 1.5; font-size: 12pt; font-family: "Times New Roman", Times, serif; }
+    .rec { margin-bottom: 10pt; }
+    .rec p { margin: 0 0 4pt; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 12pt; font-size: 12pt; font-family: "Times New Roman", Times, serif; }
+    th { border: 1pt solid #888; padding: 4pt 8pt; text-align: left; font-weight: bold; background: #f0f0f0; font-size: 12pt; font-family: "Times New Roman", Times, serif; }
+    td { border: 1pt solid #aaa; padding: 4pt 8pt; font-size: 12pt; font-family: "Times New Roman", Times, serif; }
+    .footer { margin-top: 14pt; padding-top: 6pt; border-top: 1pt solid #aaa; font-size: 10pt; color: #555; font-family: "Times New Roman", Times, serif; }
   </style>
-  </head><body>
+  </head>
+  <body lang=EN-US style='word-wrap:break-word'>
+  <div class=WordSection1>
     <h1>Financial Planning Report</h1>
     <p class="subtitle">${name} &nbsp;|&nbsp; Prepared by Brady Wells, Northwestern Mutual &nbsp;|&nbsp; ${date}</p>
 
+    <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
     <h2>Client Overview</h2>
+    </div>
     <p>${clientInfo}</p>
     ${fp.goals ? `<p><strong>Financial Goals:</strong> ${fp.goals}</p>` : ''}
 
+    <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
     <h2>Financial Summary</h2>
+    </div>
     <p>${ai.summary || ''}</p>
 
+    <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
     <h2>Key Metrics</h2>
+    </div>
     <table><tr>${snapshotRows}</tr></table>
 
+    <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
     <h2>Recommended Income Allocation</h2>
+    </div>
     <table>
       <tr>
         <th style="width:35%;">Category</th>
@@ -861,10 +877,16 @@ function downloadRecommendations() {
       ${allocationRows}
     </table>
 
-    ${ai.product_rationale ? `<h2>Why ${focus.type} Is the Right Choice</h2><p>${ai.product_rationale}</p>` : ''}
+    ${ai.product_rationale ? `
+    <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
+    <h2>Why ${focus.type} Is the Right Choice</h2>
+    </div>
+    <p>${ai.product_rationale}</p>` : ''}
 
-    <p style="page-break-after:always;margin:0;font-size:1pt;">&nbsp;</p>
+    <p style='page-break-after:always;margin:0;font-size:1.0pt;line-height:1.0pt;'><o:p>&nbsp;</o:p></p>
+    <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
     <h2>Growth Projection — ${focus.type}</h2>
+    </div>
     <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
     <table>
       <tr>
@@ -883,16 +905,21 @@ function downloadRecommendations() {
       }).join('')}
     </table>
 
+    <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
     <h2>Recommendations</h2>
+    </div>
     ${recSections}
 
     ${ai.conclusion ? `
+    <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
     <h2>Next Steps</h2>
+    </div>
     <p>${ai.conclusion}</p>` : ''}
 
     <div class="footer">
       This report was prepared by Brady Wells, Financial Representative Intern at Northwestern Mutual. For informational purposes only. &copy; ${new Date().getFullYear()} Northwestern Mutual.
     </div>
+  </div>
   </body></html>`;
 
   const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword' });
