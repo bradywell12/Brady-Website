@@ -516,17 +516,43 @@ Use real numbers throughout. Allocation values are % of monthly income. Include 
 }
 
 function parseAIResponse(text) {
+  const start = text.indexOf('{');
+  if (start === -1) { console.error('parseAIResponse: no { found'); return null; }
+
+  // Try clean parse first (full valid JSON)
+  const end = text.lastIndexOf('}');
+  if (end > start) {
+    try { return JSON.parse(text.slice(start, end + 1)); } catch(e) {}
+  }
+
+  // JSON was likely truncated — attempt to repair by closing open brackets/braces
   try {
-    const start = text.indexOf('{');
-    const end   = text.lastIndexOf('}');
-    if (start === -1 || end === -1 || end <= start) {
-      console.error('parseAIResponse: no JSON object found in text:', text.slice(0, 200));
-      return null;
+    let slice = text.slice(start);
+    // Remove trailing incomplete field (last comma + anything after)
+    slice = slice.replace(/,\s*"[^"]*"\s*:\s*[^,}\]]*$/, '');
+    slice = slice.replace(/,\s*$/, '');
+
+    // Count open braces and brackets and close them
+    let braces = 0, brackets = 0;
+    for (const ch of slice) {
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
     }
-    const slice = text.slice(start, end + 1);
-    return JSON.parse(slice);
+    // Close any unclosed string
+    const lastQuote = slice.lastIndexOf('"');
+    const quoteCount = (slice.match(/"/g) || []).length;
+    if (quoteCount % 2 !== 0) slice = slice.slice(0, lastQuote);
+
+    while (brackets > 0) { slice += ']'; brackets--; }
+    while (braces > 0)   { slice += '}'; braces--; }
+
+    const result = JSON.parse(slice);
+    console.warn('parseAIResponse: repaired truncated JSON');
+    return result;
   } catch (e) {
-    console.error('parseAIResponse: JSON.parse failed:', e.message);
+    console.error('parseAIResponse: repair failed:', e.message);
     console.error('Raw text:', text.slice(0, 500));
     return null;
   }
