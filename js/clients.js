@@ -464,7 +464,7 @@ Allocation values = % of monthly income. Priority = High/Medium/Low only. Use ac
 
     document.getElementById('aiLoading').style.display = 'none';
     document.getElementById('aiOutput').style.display  = 'block';
-    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v42)';
+    document.getElementById('aiTimestamp').textContent = 'Generated ' + new Date().toLocaleString() + ' (v43)';
     document.getElementById('aiContent').innerHTML = ai ? renderAIOutput(ai) : renderRawText(text);
     if (ai) renderGrowthChart();
   } catch (err) {
@@ -863,7 +863,8 @@ function downloadRecommendations() {
 
     ${ai.product_rationale ? `<h2>Why ${focus.type} Is the Right Choice</h2><p>${ai.product_rationale}</p>` : ''}
 
-    <h2 style="page-break-before:always;">Growth Projection — ${focus.type}</h2>
+    <br style="mso-break-type:page-break;" clear="all" />
+    <h2>Growth Projection — ${focus.type}</h2>
     <p>Contributing $${Number(focus.monthly).toLocaleString()}/month at an assumed ${rate}% annual return over ${safeYears} years.</p>
     <table>
       <tr>
