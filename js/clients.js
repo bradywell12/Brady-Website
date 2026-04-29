@@ -1208,7 +1208,16 @@ async function confirmImport2() {
   const btn = document.getElementById('confirmImport2');
   btn.textContent = 'Importing...';
   btn.disabled = true;
-  const inserted = await bulkInsertClients(pendingImport);
+  const mappedRows = pendingImport.map(c => ({
+    first_name:  c.firstName  || c.first_name  || null,
+    last_name:   c.lastName   || c.last_name   || null,
+    email:       c.email      || null,
+    phone:       c.phone      || null,
+    status:      'New Lead',
+    source:      c.company || c.position ? 'Manual Entry' : 'Manual Entry',
+    notes:       [c.position, c.company].filter(Boolean).join(' at ') || null,
+  }));
+  const inserted = await bulkInsertClients(mappedRows);
   if (inserted.length) {
     clients.unshift(...inserted);
     applyFiltersAndRender();
