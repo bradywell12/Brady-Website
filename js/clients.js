@@ -1365,7 +1365,7 @@ function parseVCF(file, pane2 = false) {
         .replace(/\n[ \t]/g, ''); // unfold RFC 6350 folded lines
 
       const get = (field) => {
-        const regex = new RegExp(`(?:item\\d+\\.)?${field}[^:\\n]*:([^\\n]+)`, 'i');
+        const regex = new RegExp(`^(?:item\\d+\\.)?${field}[^:\\n]*:([^\\n]+)`, 'im');
         const match = c.match(regex);
         return match ? match[1].trim() : '';
       };
