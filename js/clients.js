@@ -1404,7 +1404,7 @@ function parseVCF(file, pane2 = false) {
         normalizedCard.match(/(?:item\d+\.)?TEL[^:\n]*:([^\n]+)/i) ||
         normalizedCard.match(/TEL[^:\n]*:([^\n]+)/i) ||
         normalizedCard.match(/TEL:([^\n]+)/i);
-      const phone = telMatch ? telMatch[1].trim().replace(/\s+/g, '') : '';
+      const phone = telMatch ? telMatch[1].trim().replace(/^\+1/, '').replace(/\D/g, '') : '';
 
       // Email — grab first EMAIL value
       const emailMatch = card.match(/^EMAIL[^:]*:(.+)$/im);
@@ -2056,6 +2056,35 @@ function setBothDupBtns(text, disabled) {
     const el = document.getElementById(id);
     if (el) { el.textContent = text; el.disabled = disabled; }
   });
+}
+
+async function cleanPhoneNumbers() {
+  const btn = document.getElementById('cleanPhonesBtn');
+  btn.textContent = 'Cleaning...';
+  btn.disabled = true;
+
+  const toFix = clients.filter(c => c.phone && /^\+1/.test(c.phone));
+  if (toFix.length === 0) {
+    showToast('No phone numbers need cleaning.', 'success');
+    btn.textContent = 'Clean Phone #s';
+    btn.disabled = false;
+    return;
+  }
+
+  let fixed = 0;
+  for (const c of toFix) {
+    const cleaned = c.phone.replace(/^\+1/, '').replace(/\D/g, '');
+    const { error } = await db.from('clients').update({ phone: cleaned }).eq('id', c.id);
+    if (!error) {
+      c.phone = cleaned;
+      fixed++;
+    }
+  }
+
+  applyFiltersAndRender();
+  showToast(`Fixed ${fixed} phone number${fixed !== 1 ? 's' : ''}.`, 'success');
+  btn.textContent = 'Clean Phone #s';
+  btn.disabled = false;
 }
 
 async function removeDuplicates() {
