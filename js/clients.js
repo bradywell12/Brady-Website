@@ -2105,12 +2105,16 @@ async function removeDuplicates() {
     const first = (c.first_name || '').toLowerCase().trim();
     const last  = (c.last_name  || '').toLowerCase().trim();
     const isDup =
+      (phone && clientSeen.has(`phone|${phone}`)) ||
+      (email && clientSeen.has(`email|${email}`)) ||
       (phone && clientSeen.has(`${first}|${last}|${phone}`)) ||
       (email && clientSeen.has(`${first}|${last}|${email}`)) ||
       (phone && email && clientSeen.has(`${phone}|${email}`));
     if (isDup) {
       clientsToDelete.push(c.id);
     } else {
+      if (phone) clientSeen.set(`phone|${phone}`, c.id);
+      if (email) clientSeen.set(`email|${email}`, c.id);
       if (phone) clientSeen.set(`${first}|${last}|${phone}`, c.id);
       if (email) clientSeen.set(`${first}|${last}|${email}`, c.id);
       if (phone && email) clientSeen.set(`${phone}|${email}`, c.id);
