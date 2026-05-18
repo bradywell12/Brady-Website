@@ -430,7 +430,7 @@ async function getAIRecommendations() {
   document.getElementById('aiOutput').style.display     = 'none';
   document.getElementById('aiLoading').style.display    = 'block';
 
-  const prompt = `Financial planning assistant for Brady Wells (Northwestern Mutual intern). Respond with ONLY a single-line compact JSON object — no whitespace, no indentation, no markdown, no code fences.
+  const prompt = `Financial planning assistant for Brady Wells (financial representative). Respond with ONLY a single-line compact JSON object — no whitespace, no indentation, no markdown, no code fences.
 
 Client: ${c.first_name || ''} ${c.last_name || ''}, Age ${fp.age || '?'}, ${fp.marital || ''}, ${fp.dependents || 0} dependents
 Income: ${fmt(fp.income)}/yr | Expenses: ${fmt(fp.expenses)}/mo | Debt: ${fmt(fp.debt)} | Assets: ${fmt(fp.assets)}
@@ -571,7 +571,7 @@ const SAMPLE_AI = {
       why: "No current coverage leaves dependents financially exposed. At age 22, term life insurance rates are at their lowest.",
       action: "Apply for a 20-year term policy with $500,000 in coverage.",
       timeline: "Immediately",
-      product: "Northwestern Mutual Term Life Insurance"
+      product: "Brady Wells Financial Term Life Insurance"
     },
     {
       title: "Accelerate Debt Payoff",
@@ -587,7 +587,7 @@ const SAMPLE_AI = {
       why: "At age 22 in a lower tax bracket, a Roth IRA offers tax-free growth for decades. Starting now vs. at 32 could mean $200,000+ more at retirement.",
       action: "Contribute $500/month to a Roth IRA once emergency fund reaches 3 months.",
       timeline: "Start within 6 months",
-      product: "Northwestern Mutual Investment Services"
+      product: "Brady Wells Financial Investment Services"
     }
   ],
   conclusion: "The most important next step is to get life insurance in place immediately — at 22 with no coverage, this is the biggest risk on the table. At the same meeting, set up a $330/month automatic transfer to a dedicated emergency fund account. These two moves alone will give this client a real financial foundation to build everything else on."
@@ -846,7 +846,7 @@ function downloadRecommendations() {
   <body lang=EN-US style='word-wrap:break-word'>
   <div class=WordSection1>
     <h1>Financial Planning Report</h1>
-    <p class="subtitle">${name} &nbsp;|&nbsp; Prepared by Brady Wells, Northwestern Mutual &nbsp;|&nbsp; ${date}</p>
+    <p class="subtitle">${name} &nbsp;|&nbsp; Prepared by Brady Wells, Brady Wells Financial &nbsp;|&nbsp; ${date}</p>
 
     <div style='border:none;border-bottom:solid black 1.0pt;mso-border-bottom-alt:solid black .75pt;padding:0in 0in 2.0pt 0in;mso-element:para-border-div'>
     <h2>Client Overview</h2>
@@ -917,7 +917,7 @@ function downloadRecommendations() {
     <p>${ai.conclusion}</p>` : ''}
 
     <div class="footer">
-      This report was prepared by Brady Wells, Financial Representative Intern at Northwestern Mutual. For informational purposes only. &copy; ${new Date().getFullYear()} Northwestern Mutual.
+      This report was prepared by Brady Wells, Financial Representative Intern at Brady Wells Financial. For informational purposes only. &copy; ${new Date().getFullYear()} Brady Wells Financial.
     </div>
   </div>
   </body></html>`;
@@ -2322,7 +2322,7 @@ let linkedinContactId  = null;
 function openLinkedInContact(url, firstName, id) {
   linkedinContactUrl = url;
   linkedinContactId  = id;
-  const base = `Hi [First Name],\n\nI hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Northwestern Mutual.\n\nI'd love to connect and have a quick conversation about your financial goals — whether that's building wealth, protecting your family, or planning for retirement.\n\nWould you be open to a free, no-obligation chat this week?\n\nLooking forward to connecting,\nBrady Wells\nFinancial Representative | Northwestern Mutual`;
+  const base = `Hi [First Name],\n\nI hope you're doing well! My name is Brady Wells and I'm a Financial Representative with Brady Wells Financial.\n\nI'd love to connect and have a quick conversation about your financial goals — whether that's building wealth, protecting your family, or planning for retirement.\n\nWould you be open to a free, no-obligation chat this week?\n\nLooking forward to connecting,\nBrady Wells\nFinancial Representative | Brady Wells Financial`;
   document.getElementById('linkedinContactMessage').value =
     base.replace(/\[First Name\]/gi, firstName || 'there');
   document.getElementById('linkedinContactModal').style.display = 'flex';
